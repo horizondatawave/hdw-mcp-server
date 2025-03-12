@@ -158,7 +158,7 @@ Open your terminal and run the following commands:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/hdw-mcp-server.git
+git clone https://github.com/horizondatawave/hdw-mcp-server.git
 
 # Change directory to the project folder
 cd hdw-mcp-server
