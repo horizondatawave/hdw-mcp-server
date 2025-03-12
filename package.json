@@ -1,0 +1,40 @@
+{
+  "name": "hdw-mcp",
+  "version": "0.1.0",
+  "description": "A Model Context Protocol (MCP) server that provides access to Horizon Data Wave's LinkedIn API",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "hdw-mcp": "build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.23",
+    "typescript": "^5.8.2"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "linkedin",
+    "hdw",
+    "horizondatawave"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "index.js",
+  "author": ""
+}
