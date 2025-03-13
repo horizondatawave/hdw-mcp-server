@@ -191,7 +191,8 @@ Update your Claude configuration file (`claude_desktop_config.json`) with the fo
   "mcpServers": {
     "hdw": {
       "command": "node",
-      "args": ["-r", "dotenv/config", "/path/to/your/build/index.js"],
+      "args": ["/Users/yourusername/projects/hdw-mcp-server/build/index.js"],
+      "cwd": "/Users/yourusername/projects/hdw-mcp-server",
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
