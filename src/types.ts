@@ -110,6 +110,28 @@ export interface SendLinkedinPostArgs {
   timeout?: number;
 }
 
+export interface LinkedinSalesNavigatorSearchUsersArgs {
+  keywords?: string;
+  first_names?: string[];
+  last_names?: string[];
+  current_titles?: string[];
+  location?: string | string[];
+  education?: string | string[];
+  languages?: string[];
+  past_titles?: string[];
+  functions?: string[];
+  levels?: string[];
+  years_in_the_current_company?: string[];
+  years_in_the_current_position?: string[];
+  company_sizes?: string[];
+  company_types?: string[];
+  company_locations?: string | string[];
+  current_companies?: string | string[];
+  past_companies?: string | string[];
+  industry?: string | string[];
+  count: number;
+  timeout?: number;
+}
 
 export function isValidLinkedinSearchUsersArgs(
   args: unknown
@@ -331,6 +353,154 @@ export function isValidSendLinkedinPostArgs(
       obj.comment_scope !== "ALL" &&
       obj.comment_scope !== "CONNECTIONS_ONLY" &&
       obj.comment_scope !== "NONE") return false;
+
+  if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+
+  return true;
+}
+
+export function isValidLinkedinSalesNavigatorSearchUsersArgs(
+  args: unknown
+): args is LinkedinSalesNavigatorSearchUsersArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  // Проверка обязательного поля count
+  if (typeof obj.count !== "number" || obj.count <= 0 || obj.count > 2500) return false;
+
+  // Проверка опциональных полей
+  if (obj.keywords !== undefined && typeof obj.keywords !== "string") return false;
+
+  if (obj.first_names !== undefined) {
+    if (!Array.isArray(obj.first_names)) return false;
+    for (const name of obj.first_names) {
+      if (typeof name !== "string") return false;
+    }
+  }
+
+  if (obj.last_names !== undefined) {
+    if (!Array.isArray(obj.last_names)) return false;
+    for (const name of obj.last_names) {
+      if (typeof name !== "string") return false;
+    }
+  }
+
+  if (obj.current_titles !== undefined) {
+    if (!Array.isArray(obj.current_titles)) return false;
+    for (const title of obj.current_titles) {
+      if (typeof title !== "string") return false;
+    }
+  }
+
+  if (obj.location !== undefined) {
+    if (typeof obj.location !== "string" && !Array.isArray(obj.location)) return false;
+    if (Array.isArray(obj.location)) {
+      for (const loc of obj.location) {
+        if (typeof loc !== "string") return false;
+      }
+    }
+  }
+
+  if (obj.education !== undefined) {
+    if (typeof obj.education !== "string" && !Array.isArray(obj.education)) return false;
+    if (Array.isArray(obj.education)) {
+      for (const edu of obj.education) {
+        if (typeof edu !== "string") return false;
+      }
+    }
+  }
+
+  if (obj.languages !== undefined) {
+    if (!Array.isArray(obj.languages)) return false;
+    for (const lang of obj.languages) {
+      if (typeof lang !== "string") return false;
+    }
+  }
+
+  if (obj.past_titles !== undefined) {
+    if (!Array.isArray(obj.past_titles)) return false;
+    for (const title of obj.past_titles) {
+      if (typeof title !== "string") return false;
+    }
+  }
+
+  if (obj.functions !== undefined) {
+    if (!Array.isArray(obj.functions)) return false;
+    for (const func of obj.functions) {
+      if (typeof func !== "string") return false;
+    }
+  }
+
+  if (obj.levels !== undefined) {
+    if (!Array.isArray(obj.levels)) return false;
+    for (const level of obj.levels) {
+      if (typeof level !== "string") return false;
+    }
+  }
+
+  if (obj.years_in_the_current_company !== undefined) {
+    if (!Array.isArray(obj.years_in_the_current_company)) return false;
+    for (const years of obj.years_in_the_current_company) {
+      if (typeof years !== "string") return false;
+    }
+  }
+
+  if (obj.years_in_the_current_position !== undefined) {
+    if (!Array.isArray(obj.years_in_the_current_position)) return false;
+    for (const years of obj.years_in_the_current_position) {
+      if (typeof years !== "string") return false;
+    }
+  }
+
+  if (obj.company_sizes !== undefined) {
+    if (!Array.isArray(obj.company_sizes)) return false;
+    for (const size of obj.company_sizes) {
+      if (typeof size !== "string") return false;
+    }
+  }
+
+  if (obj.company_types !== undefined) {
+    if (!Array.isArray(obj.company_types)) return false;
+    for (const type of obj.company_types) {
+      if (typeof type !== "string") return false;
+    }
+  }
+
+  if (obj.company_locations !== undefined) {
+    if (typeof obj.company_locations !== "string" && !Array.isArray(obj.company_locations)) return false;
+    if (Array.isArray(obj.company_locations)) {
+      for (const loc of obj.company_locations) {
+        if (typeof loc !== "string") return false;
+      }
+    }
+  }
+
+  if (obj.current_companies !== undefined) {
+    if (typeof obj.current_companies !== "string" && !Array.isArray(obj.current_companies)) return false;
+    if (Array.isArray(obj.current_companies)) {
+      for (const company of obj.current_companies) {
+        if (typeof company !== "string") return false;
+      }
+    }
+  }
+
+  if (obj.past_companies !== undefined) {
+    if (typeof obj.past_companies !== "string" && !Array.isArray(obj.past_companies)) return false;
+    if (Array.isArray(obj.past_companies)) {
+      for (const company of obj.past_companies) {
+        if (typeof company !== "string") return false;
+      }
+    }
+  }
+
+  if (obj.industry !== undefined) {
+    if (typeof obj.industry !== "string" && !Array.isArray(obj.industry)) return false;
+    if (Array.isArray(obj.industry)) {
+      for (const ind of obj.industry) {
+        if (typeof ind !== "string") return false;
+      }
+    }
+  }
 
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
 

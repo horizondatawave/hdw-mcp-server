@@ -30,6 +30,7 @@ import {
   GetLinkedinCompanyArgs,
   GetLinkedinCompanyEmployeesArgs,
   SendLinkedinPostArgs,
+  LinkedinSalesNavigatorSearchUsersArgs,
   isValidLinkedinSearchUsersArgs,
   isValidLinkedinUserProfileArgs,
   isValidLinkedinEmailUserArgs,
@@ -45,7 +46,8 @@ import {
   isValidGetLinkedinGoogleCompanyArgs,
   isValidGetLinkedinCompanyArgs,
   isValidGetLinkedinCompanyEmployeesArgs,
-  isValidSendLinkedinPostArgs
+  isValidSendLinkedinPostArgs,
+  isValidLinkedinSalesNavigatorSearchUsersArgs
 } from "./types.js";
 
 dotenv.config();
@@ -83,6 +85,7 @@ const API_CONFIG = {
     LINKEDIN_GOOGLE_COMPANY: "/api/linkedin/google/company",
     LINKEDIN_COMPANY: "/api/linkedin/company",
     LINKEDIN_COMPANY_EMPLOYEES: "/api/linkedin/company/employees",
+    LINKEDIN_SN_SEARCH_USERS: "/api/linkedin/sn_search/users",
   }
 } as const;
 
@@ -432,6 +435,165 @@ const GET_LINKEDIN_COMPANY_EMPLOYEES_TOOL: Tool = {
   }
 };
 
+const LINKEDIN_SN_SEARCH_USERS_TOOL: Tool = {
+  name: "linkedin_sn_search_users",
+  description: "Advanced search for LinkedIn users using Sales Navigator filters",
+  inputSchema: {
+    type: "object",
+    properties: {
+      keywords: {
+        type: "string",
+        description: "Any keyword for searching in the user profile. Using this may reduce result count."
+      },
+      first_names: {
+        type: "array",
+        items: { type: "string" },
+        description: "Exact first names to search for"
+      },
+      last_names: {
+        type: "array",
+        items: { type: "string" },
+        description: "Exact last names to search for"
+      },
+      current_titles: {
+        type: "array",
+        items: { type: "string" },
+        description: "Exact words to search in current titles"
+      },
+      location: {
+        type: ["string", "array"],
+        items: { type: "string" },
+        description: "Location URN (geo:*) or name, or array of them"
+      },
+      education: {
+        type: ["string", "array"],
+        items: { type: "string" },
+        description: "Education URN (company:*) or name, or array of them"
+      },
+      languages: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [
+            "Arabic", "English", "Spanish", "Portuguese", "Chinese",
+            "French", "Italian", "Russian", "German", "Dutch",
+            "Turkish", "Tagalog", "Polish", "Korean", "Japanese",
+            "Malay", "Norwegian", "Danish", "Romanian", "Swedish",
+            "Bahasa Indonesia", "Czech"
+          ]
+        },
+        description: "Profile languages"
+      },
+      past_titles: {
+        type: "array",
+        items: { type: "string" },
+        description: "Exact words to search in past titles"
+      },
+      functions: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [
+            "Accounting", "Administrative", "Arts and Design", "Business", "Development",
+            "Community and Social Services", "Consulting", "Education", "Engineering",
+            "Entrepreneurship", "Finance", "Healthcare Services", "Human Resources",
+            "Information Technology", "Legal", "Marketing", "Media and Communication",
+            "Military and Protective Services", "Operations", "Product Management",
+            "Program and Project Management", "Purchasing", "Quality Assurance",
+            "Research", "Real Estate", "Sales", "Customer Success and Support"
+          ]
+        },
+        description: "Job functions"
+      },
+      levels: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [
+            "Entry", "Director", "Owner", "CXO", "Vice President",
+            "Experienced Manager", "Entry Manager", "Strategic", "Senior", "Trainy"
+          ]
+        },
+        description: "Job seniority levels"
+      },
+      years_in_the_current_company: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["0-1", "1-2", "3-5", "6-10", "10+"]
+        },
+        description: "Years in current company ranges"
+      },
+      years_in_the_current_position: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["0-1", "1-2", "3-5", "6-10", "10+"]
+        },
+        description: "Years in current position ranges"
+      },
+      company_sizes: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [
+            "Self-employed", "1-10", "11-50", "51-200", "201-500",
+            "501-1,000", "1,001-5,000", "5,001-10,000", "10,001+"
+          ]
+        },
+        description: "Company size ranges"
+      },
+      company_types: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: [
+            "Public Company", "Privately Held", "Non Profit",
+            "Educational Institution", "Partnership", "Self Employed",
+            "Self Owned", "Government Agency"
+          ]
+        },
+        description: "Company types"
+      },
+      company_locations: {
+        type: ["string", "array"],
+        items: { type: "string" },
+        description: "Company location URN (geo:*) or name, or array of them"
+      },
+      current_companies: {
+        type: ["string", "array"],
+        items: { type: "string" },
+        description: "Current company URN (company:*) or name, or array of them"
+      },
+      past_companies: {
+        type: ["string", "array"],
+        items: { type: "string" },
+        description: "Past company URN (company:*) or name, or array of them"
+      },
+      industry: {
+        type: ["string", "array"],
+        items: { type: "string" },
+        description: "Industry URN (industry:*) or name, or array of them"
+      },
+      count: {
+        type: "number",
+        description: "Maximum number of results (max 2500)",
+        default: 10,
+        minimum: 1,
+        maximum: 2500
+      },
+      timeout: {
+        type: "number",
+        description: "Timeout in seconds (20-1500)",
+        default: 300,
+        minimum: 20,
+        maximum: 1500
+      }
+    },
+    required: ["count"]
+  }
+};
+
 const server = new Server(
   { name: "hdw-mcp", version: "0.1.0" },
   {
@@ -513,7 +675,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_LINKEDIN_GOOGLE_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_EMPLOYEES_TOOL,
-    SEND_LINKEDIN_POST_TOOL
+    SEND_LINKEDIN_POST_TOOL,
+    LINKEDIN_SN_SEARCH_USERS_TOOL
   ]
 }));
 
@@ -1192,6 +1355,117 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         }
       }
+
+      case "linkedin_sn_search_users": {
+  if (!isValidLinkedinSalesNavigatorSearchUsersArgs(args)) {
+    throw new McpError(ErrorCode.InvalidParams, "Invalid LinkedIn Sales Navigator search arguments");
+  }
+
+  const {
+    keywords,
+    first_names,
+    last_names,
+    current_titles,
+    location,
+    education,
+    languages,
+    past_titles,
+    functions,
+    levels,
+    years_in_the_current_company,
+    years_in_the_current_position,
+    company_sizes,
+    company_types,
+    company_locations,
+    current_companies,
+    past_companies,
+    industry,
+    count,
+    timeout = 300
+  } = args as LinkedinSalesNavigatorSearchUsersArgs;
+
+  const requestData: Record<string, any> = {
+    count,
+    timeout
+  };
+
+  if (keywords) requestData.keywords = keywords;
+  if (first_names) requestData.first_names = first_names;
+  if (last_names) requestData.last_names = last_names;
+  if (current_titles) requestData.current_titles = current_titles;
+
+  if (location) {
+    requestData.location = typeof location === "string" && location.includes("geo:")
+      ? [{ type: "geo", value: location.replace("geo:", "") }]
+      : location;
+  }
+
+  if (education) {
+    requestData.education = typeof education === "string" && education.includes("company:")
+      ? [{ type: "company", value: education.replace("company:", "") }]
+      : education;
+  }
+
+  if (languages) requestData.languages = languages;
+  if (past_titles) requestData.past_titles = past_titles;
+  if (functions) requestData.functions = functions;
+  if (levels) requestData.levels = levels;
+  if (years_in_the_current_company) requestData.years_in_the_current_company = years_in_the_current_company;
+  if (years_in_the_current_position) requestData.years_in_the_current_position = years_in_the_current_position;
+  if (company_sizes) requestData.company_sizes = company_sizes;
+  if (company_types) requestData.company_types = company_types;
+
+  if (company_locations) {
+    requestData.company_locations = typeof company_locations === "string" && company_locations.includes("geo:")
+      ? [{ type: "geo", value: company_locations.replace("geo:", "") }]
+      : company_locations;
+  }
+
+  if (current_companies) {
+    requestData.current_companies = typeof current_companies === "string" && current_companies.includes("company:")
+      ? [{ type: "company", value: current_companies.replace("company:", "") }]
+      : current_companies;
+  }
+
+  if (past_companies) {
+    requestData.past_companies = typeof past_companies === "string" && past_companies.includes("company:")
+      ? [{ type: "company", value: past_companies.replace("company:", "") }]
+      : past_companies;
+  }
+
+  if (industry) {
+    requestData.industry = typeof industry === "string" && industry.includes("industry:")
+      ? [{ type: "industry", value: industry.replace("industry:", "") }]
+      : industry;
+  }
+
+  log("Starting LinkedIn Sales Navigator users search with filters");
+  try {
+    const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_SN_SEARCH_USERS, requestData);
+    log(`Search complete, found ${response.length} results`);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "application/json",
+          text: JSON.stringify(response, null, 2)
+        }
+      ]
+    };
+  } catch (error) {
+    log("LinkedIn Sales Navigator search error:", error);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "text/plain",
+          text: `LinkedIn Sales Navigator search API error: ${formatError(error)}`
+        }
+      ],
+      isError: true
+    };
+  }
+}
 
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
