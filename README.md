@@ -19,6 +19,8 @@ A Model Context Protocol (MCP) server that provides comprehensive access to Link
   - **Google Company Search:** Find LinkedIn companies using Google search – the first result is typically the best match.  
   - **Company Lookup:** Retrieve detailed information about a LinkedIn company.  
   - **Company Employees:** Retrieve employees for a given LinkedIn company.
+  
+- **Google Search**
 
 ---
 
