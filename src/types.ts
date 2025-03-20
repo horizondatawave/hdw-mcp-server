@@ -133,6 +133,18 @@ export interface LinkedinSalesNavigatorSearchUsersArgs {
   timeout?: number;
 }
 
+export interface LinkedinManagementConversationsPayload {
+  connected_after?: number;
+  count?: number;
+  timeout?: number;
+}
+
+export interface GoogleSearchPayload {
+  query: string;
+  count?: number;
+  timeout?: number;
+}
+
 export function isValidLinkedinSearchUsersArgs(
   args: unknown
 ): args is LinkedinSearchUsersArgs {
@@ -503,6 +515,30 @@ export function isValidLinkedinSalesNavigatorSearchUsersArgs(
   }
 
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+
+  return true;
+}
+
+export function isValidLinkedinManagementConversationsArgs(
+  args: unknown
+): args is LinkedinManagementConversationsPayload {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+  if (obj.connected_after !== undefined && typeof obj.connected_after !== "number") return false;
+  if (obj.count !== undefined && typeof obj.count !== "number") return false;
+  if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+  return true;
+}
+
+export function isValidGoogleSearchPayload(
+  args: unknown
+): args is GoogleSearchPayload {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.query !== "string" || !obj.query.trim()) return false;
+  if (obj.count !== undefined && (typeof obj.count !== "number" || obj.count <= 0 || obj.count > 20)) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
 
   return true;
 }

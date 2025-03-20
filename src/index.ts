@@ -31,6 +31,8 @@ import {
   GetLinkedinCompanyEmployeesArgs,
   SendLinkedinPostArgs,
   LinkedinSalesNavigatorSearchUsersArgs,
+  LinkedinManagementConversationsPayload,
+  GoogleSearchPayload,
   isValidLinkedinSearchUsersArgs,
   isValidLinkedinUserProfileArgs,
   isValidLinkedinEmailUserArgs,
@@ -47,7 +49,9 @@ import {
   isValidGetLinkedinCompanyArgs,
   isValidGetLinkedinCompanyEmployeesArgs,
   isValidSendLinkedinPostArgs,
-  isValidLinkedinSalesNavigatorSearchUsersArgs
+  isValidLinkedinSalesNavigatorSearchUsersArgs,
+  isValidLinkedinManagementConversationsArgs,
+  isValidGoogleSearchPayload
 } from "./types.js";
 
 dotenv.config();
@@ -86,6 +90,8 @@ const API_CONFIG = {
     LINKEDIN_COMPANY: "/api/linkedin/company",
     LINKEDIN_COMPANY_EMPLOYEES: "/api/linkedin/company/employees",
     LINKEDIN_SN_SEARCH_USERS: "/api/linkedin/sn_search/users",
+    CONVERSATIONS: "/api/linkedin/management/conversations",
+    GOOGLE_SEARCH: "/api/google/search",
   }
 } as const;
 
@@ -130,7 +136,8 @@ async function makeGetRequestWithBody(url: string, data: any): Promise<any> {
 
 async function makeRequest(endpoint: string, data: any, method: string = "POST"): Promise<any> {
   if (method === "GET" && (endpoint === API_CONFIG.ENDPOINTS.CHAT_MESSAGES ||
-                             endpoint === API_CONFIG.ENDPOINTS.USER_CONNECTIONS)) {
+                           endpoint === API_CONFIG.ENDPOINTS.USER_CONNECTIONS ||
+                           endpoint === API_CONFIG.ENDPOINTS.CONVERSATIONS)) {
     const url = API_CONFIG.BASE_URL.replace(/\/+$/, "") + endpoint;
     return await makeGetRequestWithBody(url, data);
   } else {
@@ -594,6 +601,34 @@ const LINKEDIN_SN_SEARCH_USERS_TOOL: Tool = {
   }
 };
 
+const GET_LINKEDIN_CONVERSATIONS_TOOL: Tool = {
+  name: "get_linkedin_conversations",
+  description: "Get list of LinkedIn conversations from the messaging interface. Account ID is taken from environment.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      connected_after: { type: "number", description: "Filter conversations created after the specified date (timestamp)" },
+      count: { type: "number", description: "Max conversations to return", default: 20 },
+      timeout: { type: "number", description: "Timeout in seconds", default: 300 }
+    },
+    required: []
+  }
+};
+
+const GOOGLE_SEARCH_TOOL: Tool = {
+  name: "google_search",
+  description: "Search for information using Google search API",
+  inputSchema: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "Search query. For example: 'python fastapi'" },
+      count: { type: "number", description: "Maximum number of results (from 1 to 20)", default: 10 },
+      timeout: { type: "number", description: "Timeout in seconds (20-1500)", default: 300 }
+    },
+    required: ["query"]
+  }
+};
+
 const server = new Server(
   { name: "hdw-mcp", version: "0.1.0" },
   {
@@ -623,40 +658,6 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => ({
   ]
 }));
 
-server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-  const defaultQuery = API_CONFIG.DEFAULT_QUERY;
-  if (request.params.uri !== `linkedin://users/${encodeURIComponent(defaultQuery)}`) {
-    throw new McpError(ErrorCode.InvalidRequest, `Unknown resource: ${request.params.uri}`);
-  }
-  try {
-    const response = await makeRequest(API_CONFIG.ENDPOINTS.SEARCH_USERS, {
-      keywords: defaultQuery,
-      count: 10,
-      timeout: 300
-    });
-    return {
-      contents: [
-        {
-          uri: request.params.uri,
-          mimeType: "application/json",
-          text: JSON.stringify(response, null, 2)
-        }
-      ]
-    };
-  } catch (error) {
-    log("Search error:", error);
-    return {
-      contents: [
-        {
-          uri: request.params.uri,
-          mimeType: "text/plain",
-          text: `LinkedIn Search API error: ${formatError(error)}`
-        }
-      ],
-      isError: true
-    };
-  }
-});
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
@@ -676,7 +677,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_LINKEDIN_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_EMPLOYEES_TOOL,
     SEND_LINKEDIN_POST_TOOL,
-    LINKEDIN_SN_SEARCH_USERS_TOOL
+    LINKEDIN_SN_SEARCH_USERS_TOOL,
+    GET_LINKEDIN_CONVERSATIONS_TOOL,
+    GOOGLE_SEARCH_TOOL
   ]
 }));
 
@@ -1466,6 +1469,92 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
 }
+
+
+
+      case "get_linkedin_conversations": {
+      if (!isValidLinkedinManagementConversationsArgs(args)) {
+        throw new McpError(ErrorCode.InvalidParams, "Invalid conversations arguments");
+      }
+      const { connected_after, count = 20, timeout = 300 } = args as LinkedinManagementConversationsPayload;
+      const requestData: {
+        timeout: number;
+        account_id: string;
+        connected_after?: number;
+        count?: number;
+      } = {
+        timeout: Number(timeout),
+        account_id: ACCOUNT_ID!
+      };
+      if (connected_after != null) {
+        requestData.connected_after = Number(connected_after);
+      }
+      if (count != null) {
+        requestData.count = Number(count);
+      }
+      log("Starting LinkedIn conversations lookup");
+      try {
+        const response = await makeRequest(API_CONFIG.ENDPOINTS.CONVERSATIONS, requestData, "GET");
+        return {
+          content: [
+            {
+              type: "text",
+              mimeType: "application/json",
+              text: JSON.stringify(response, null, 2)
+            }
+          ]
+        };
+      } catch (error) {
+        log("LinkedIn conversations lookup error:", error);
+        return {
+          content: [
+            {
+              type: "text",
+              mimeType: "text/plain",
+              text: `LinkedIn conversations API error: ${formatError(error)}`
+            }
+          ],
+          isError: true
+        };
+      }
+    }
+
+      case "google_search": {
+          if (!isValidGoogleSearchPayload(args)) {
+            throw new McpError(ErrorCode.InvalidParams, "Invalid Google search arguments");
+          }
+          const { query, count = 10, timeout = 300 } = args as GoogleSearchPayload;
+          const requestData = {
+            timeout,
+            query,
+            count: Math.min(Math.max(1, count), 20) // Ensure count is between 1 and 20
+          };
+          log(`Starting Google search for: ${query}`);
+          try {
+            const response = await makeRequest(API_CONFIG.ENDPOINTS.GOOGLE_SEARCH, requestData);
+            return {
+              content: [
+                {
+                  type: "text",
+                  mimeType: "application/json",
+                  text: JSON.stringify(response, null, 2)
+                }
+              ]
+            };
+          } catch (error) {
+            log("Google search error:", error);
+            return {
+              content: [
+                {
+                  type: "text",
+                  mimeType: "text/plain",
+                  text: `Google search API error: ${formatError(error)}`
+                }
+              ],
+              isError: true
+            };
+          }
+          }
 
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
