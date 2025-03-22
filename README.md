@@ -192,9 +192,8 @@ Update your Claude configuration file (`claude_desktop_config.json`) with the fo
 {
   "mcpServers": {
     "hdw": {
-      "command": "node",
-      "args": ["/Users/yourusername/projects/hdw-mcp-server/build/index.js"],
-      "cwd": "/Users/yourusername/projects/hdw-mcp-server",
+      "command": "npx",
+      "args": ["@horizondatawave/mcp"],
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
@@ -254,9 +253,8 @@ Below is an example configuration for an MCP client (e.g., a custom integration)
 {
   "mcpServers": {
     "hdw": {
-      "command": "node",
-      "args": ["/Users/yourusername/projects/hdw-mcp-server/build/index.js"],
-      "cwd": "/Users/yourusername/projects/hdw-mcp-server",
+      "command": "npx",
+      "args": [""],
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
