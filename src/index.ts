@@ -54,16 +54,24 @@ import {
   isValidGoogleSearchPayload
 } from "./types.js";
 
-dotenv.config();
+try {
+  dotenv.config();
+  if (process.env.HOME) {
+    dotenv.config({ path: `${process.env.HOME}/.hdw-mcp.env` });
+  }
+} catch (error) {
+  console.error("Error loading .env file:", error);
+}
 
 const API_KEY = process.env.HDW_ACCESS_TOKEN;
 const ACCOUNT_ID = process.env.HDW_ACCOUNT_ID;
 
 if (!API_KEY) {
-  throw new Error("HDW_ACCESS_TOKEN environment variable is required");
+  console.error("Error: HDW_ACCESS_TOKEN environment variable is required");
+  process.exit(1);
 }
 if (!ACCOUNT_ID) {
-  throw new Error("HDW_ACCOUNT_ID environment variable is required for chat endpoints");
+  console.error("Warning: HDW_ACCOUNT_ID environment variable is required for chat endpoints");
 }
 
 const API_CONFIG = {
