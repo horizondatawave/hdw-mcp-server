@@ -254,7 +254,7 @@ Below is an example configuration for an MCP client (e.g., a custom integration)
   "mcpServers": {
     "hdw": {
       "command": "npx",
-      "args": [""],
+      "args": ["@horizondatawave/mcp"],
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
