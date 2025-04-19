@@ -1,4 +1,5 @@
 # HDW MCP Server
+[![smithery badge](https://smithery.ai/badge/@horizondatawave/hdw-mcp-server)](https://smithery.ai/server/@horizondatawave/hdw-mcp-server)
 
 A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn data and functionalities using the HorizonDataWave API, enabling not only data retrieval but also robust management of user accounts.
 ---
@@ -153,6 +154,14 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
 ---
 
 ## Setup Guide
+
+### Installing via Smithery
+
+To install HDW MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@horizondatawave/hdw-mcp-server):
+
+```bash
+npx -y @smithery/cli install @horizondatawave/hdw-mcp-server --client claude
+```
 
 ### 1. Clone the Repository (macOS)
 
