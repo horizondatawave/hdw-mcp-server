@@ -202,7 +202,7 @@ Update your Claude configuration file (`claude_desktop_config.json`) with the fo
   "mcpServers": {
     "hdw": {
       "command": "npx",
-      "args": ["@horizondatawave/mcp"],
+      "args": ["-y","@horizondatawave/mcp"],
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
@@ -263,7 +263,7 @@ Below is an example configuration for an MCP client (e.g., a custom integration)
   "mcpServers": {
     "hdw": {
       "command": "npx",
-      "args": ["@horizondatawave/mcp"],
+      "args": ["-y","@horizondatawave/mcp"],
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
