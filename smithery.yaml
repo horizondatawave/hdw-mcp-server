@@ -1,0 +1,24 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - hdwAccessToken
+      - hdwAccountId
+    properties:
+      hdwAccessToken:
+        type: string
+        description: Your Horizon Data Wave access token
+      hdwAccountId:
+        type: string
+        description: Your Horizon Data Wave account ID
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({ command: 'node', args: ['build/index.js'], env: { HDW_ACCESS_TOKEN: config.hdwAccessToken, HDW_ACCOUNT_ID: config.hdwAccountId } })
+  exampleConfig:
+    hdwAccessToken: YOUR_HD_W_ACCESS_TOKEN
+    hdwAccountId: YOUR_ACCOUNT_ID
