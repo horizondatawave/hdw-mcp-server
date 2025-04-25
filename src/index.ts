@@ -112,68 +112,32 @@ function log(message: string, ...args: any[]) {
   console.error(`[${new Date().toISOString()}] ${message}`, ...args);
 }
 
-async function makeGetRequestWithBody(url: string, data: any): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const bodyString = JSON.stringify(data);
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "access-token": API_KEY!,
-        "Content-Length": Buffer.byteLength(bodyString, "utf-8").toString()
-      }
-    };
-    log(`Making GET request to ${url} with body: ${bodyString}`);
-    const req = https.request(url, options, (res) => {
-      let rawData = "";
-      res.on("data", (chunk) => { rawData += chunk; });
-      res.on("end", () => {
-        try {
-          const parsedData = JSON.parse(rawData);
-          resolve(parsedData);
-        } catch (e) {
-          reject(e);
-        }
-      });
-    });
-    req.on("error", (e) => reject(e));
-    req.write(bodyString);
-    req.end();
-  });
-}
 
 async function makeRequest(endpoint: string, data: any, method: string = "POST"): Promise<any> {
-  if (method === "GET" && (endpoint === API_CONFIG.ENDPOINTS.CHAT_MESSAGES ||
-                           endpoint === API_CONFIG.ENDPOINTS.USER_CONNECTIONS ||
-                           endpoint === API_CONFIG.ENDPOINTS.CONVERSATIONS)) {
-    const url = API_CONFIG.BASE_URL.replace(/\/+$/, "") + endpoint;
-    return await makeGetRequestWithBody(url, data);
-  } else {
-    const baseUrl = API_CONFIG.BASE_URL.replace(/\/+$/, "");
-    const url = baseUrl + (endpoint.startsWith("/") ? endpoint : `/${endpoint}`);
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-    headers.append("access-token", API_KEY!);
-    const options: RequestInit = {
-      method,
-      headers,
-      body: JSON.stringify(data)
-    };
-    log(`Making ${method} request to ${endpoint} with data: ${JSON.stringify(data)}`);
-    const startTime = Date.now();
-    try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`API error: ${response.status} ${errorData.message || response.statusText}`);
-      }
-      const result = await response.json();
-      log(`API request to ${endpoint} completed in ${Date.now() - startTime}ms`);
-      return result;
-    } catch (error) {
-      log(`API request to ${endpoint} failed after ${Date.now() - startTime}ms:`, error);
-      throw error;
+  const baseUrl = API_CONFIG.BASE_URL.replace(/\/+$/, "");
+  const url = baseUrl + (endpoint.startsWith("/") ? endpoint : `/${endpoint}`);
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  headers.append("access-token", API_KEY!);
+  const options: RequestInit = {
+    method,
+    headers,
+    body: JSON.stringify(data)
+  };
+  log(`Making ${method} request to ${endpoint} with data: ${JSON.stringify(data)}`);
+  const startTime = Date.now();
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`API error: ${response.status} ${errorData.message || response.statusText}`);
     }
+    const result = await response.json();
+    log(`API request to ${endpoint} completed in ${Date.now() - startTime}ms`);
+    return result;
+  } catch (error) {
+    log(`API request to ${endpoint} failed after ${Date.now() - startTime}ms:`, error);
+    throw error;
   }
 }
 
@@ -912,41 +876,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_linkedin_chat_messages": {
-        if (!isValidLinkedinChatMessagesArgs(args)) {
-          throw new McpError(ErrorCode.InvalidParams, "Invalid chat messages arguments");
+  if (!isValidLinkedinChatMessagesArgs(args)) {
+    throw new McpError(ErrorCode.InvalidParams, "Invalid chat messages arguments");
+  }
+  const { user, count = 20, timeout = 300 } = args as LinkedinChatMessagesArgs;
+  const normalizedUser = normalizeUserURN(user);
+  if (!isValidUserURN(normalizedUser)) {
+    throw new McpError(ErrorCode.InvalidParams, "Invalid URN format. Must start with 'fsd_profile:'");
+  }
+  const requestData = { timeout, user: normalizedUser, count, account_id: ACCOUNT_ID };
+  log("Starting LinkedIn chat messages lookup for user:", normalizedUser);
+  try {
+    // Changed from GET to using default POST
+    const response = await makeRequest(API_CONFIG.ENDPOINTS.CHAT_MESSAGES, requestData);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "application/json",
+          text: JSON.stringify(response, null, 2)
         }
-        const { user, count = 20, timeout = 300 } = args as LinkedinChatMessagesArgs;
-        const normalizedUser = normalizeUserURN(user);
-        if (!isValidUserURN(normalizedUser)) {
-          throw new McpError(ErrorCode.InvalidParams, "Invalid URN format. Must start with 'fsd_profile:'");
+      ]
+    };
+  } catch (error) {
+    log("LinkedIn chat messages lookup error:", error);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "text/plain",
+          text: `LinkedIn chat messages API error: ${formatError(error)}`
         }
-        const requestData = { timeout, user: normalizedUser, count, account_id: ACCOUNT_ID };
-        log("Starting LinkedIn chat messages lookup for user:", normalizedUser);
-        try {
-          const response = await makeRequest(API_CONFIG.ENDPOINTS.CHAT_MESSAGES, requestData, "GET");
-          return {
-            content: [
-              {
-                type: "text",
-                mimeType: "application/json",
-                text: JSON.stringify(response, null, 2)
-              }
-            ]
-          };
-        } catch (error) {
-          log("LinkedIn chat messages lookup error:", error);
-          return {
-            content: [
-              {
-                type: "text",
-                mimeType: "text/plain",
-                text: `LinkedIn chat messages API error: ${formatError(error)}`
-              }
-            ],
-            isError: true
-          };
-        }
-      }
+      ],
+      isError: true
+    };
+  }
+}
 
       case "send_linkedin_chat_message": {
         if (!isValidSendLinkedinChatMessageArgs(args)) {
@@ -1119,51 +1084,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_linkedin_user_connections": {
-        if (!isValidGetLinkedinUserConnectionsArgs(args)) {
-          throw new McpError(ErrorCode.InvalidParams, "Invalid user connections arguments");
+  if (!isValidGetLinkedinUserConnectionsArgs(args)) {
+    throw new McpError(ErrorCode.InvalidParams, "Invalid user connections arguments");
+  }
+  const { connected_after, count = 20, timeout = 300 } = args as GetLinkedinUserConnectionsArgs;
+  const requestData: {
+    timeout: number;
+    account_id: string;
+    connected_after?: number;
+    count?: number;
+  } = {
+    timeout: Number(timeout),
+    account_id: ACCOUNT_ID!
+  };
+  if (connected_after != null) {
+    requestData.connected_after = Number(connected_after);
+  }
+  if (count != null) {
+    requestData.count = Number(count);
+  }
+  log("Starting LinkedIn user connections lookup");
+  try {
+    // Changed from GET to using default POST
+    const response = await makeRequest(API_CONFIG.ENDPOINTS.USER_CONNECTIONS, requestData);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "application/json",
+          text: JSON.stringify(response, null, 2)
         }
-        const { connected_after, count = 20, timeout = 300 } = args as GetLinkedinUserConnectionsArgs;
-        const requestData: {
-          timeout: number;
-          account_id: string;
-          connected_after?: number;
-          count?: number;
-        } = {
-          timeout: Number(timeout),
-          account_id: ACCOUNT_ID!
-        };
-        if (connected_after != null) {
-          requestData.connected_after = Number(connected_after);
+      ]
+    };
+  } catch (error) {
+    log("LinkedIn user connections lookup error:", error);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "text/plain",
+          text: `LinkedIn user connections API error: ${formatError(error)}`
         }
-        if (count != null) {
-          requestData.count = Number(count);
-        }
-        log("Starting LinkedIn user connections lookup");
-        try {
-          const response = await makeRequest(API_CONFIG.ENDPOINTS.USER_CONNECTIONS, requestData, "GET");
-          return {
-            content: [
-              {
-                type: "text",
-                mimeType: "application/json",
-                text: JSON.stringify(response, null, 2)
-              }
-            ]
-          };
-        } catch (error) {
-          log("LinkedIn user connections lookup error:", error);
-          return {
-            content: [
-              {
-                type: "text",
-                mimeType: "text/plain",
-                text: `LinkedIn user connections API error: ${formatError(error)}`
-              }
-            ],
-            isError: true
-          };
-        }
-      }
+      ],
+      isError: true
+    };
+  }
+}
 
       case "get_linkedin_post_reposts": {
         if (!isValidGetLinkedinPostRepostsArgs(args)) {
@@ -1481,51 +1447,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 
       case "get_linkedin_conversations": {
-      if (!isValidLinkedinManagementConversationsArgs(args)) {
-        throw new McpError(ErrorCode.InvalidParams, "Invalid conversations arguments");
-      }
-      const { connected_after, count = 20, timeout = 300 } = args as LinkedinManagementConversationsPayload;
-      const requestData: {
-        timeout: number;
-        account_id: string;
-        connected_after?: number;
-        count?: number;
-      } = {
-        timeout: Number(timeout),
-        account_id: ACCOUNT_ID!
-      };
-      if (connected_after != null) {
-        requestData.connected_after = Number(connected_after);
-      }
-      if (count != null) {
-        requestData.count = Number(count);
-      }
-      log("Starting LinkedIn conversations lookup");
-      try {
-        const response = await makeRequest(API_CONFIG.ENDPOINTS.CONVERSATIONS, requestData, "GET");
-        return {
-          content: [
-            {
-              type: "text",
-              mimeType: "application/json",
-              text: JSON.stringify(response, null, 2)
-            }
-          ]
-        };
-      } catch (error) {
-        log("LinkedIn conversations lookup error:", error);
-        return {
-          content: [
-            {
-              type: "text",
-              mimeType: "text/plain",
-              text: `LinkedIn conversations API error: ${formatError(error)}`
-            }
-          ],
-          isError: true
-        };
-      }
-    }
+  if (!isValidLinkedinManagementConversationsArgs(args)) {
+    throw new McpError(ErrorCode.InvalidParams, "Invalid conversations arguments");
+  }
+  const { connected_after, count = 20, timeout = 300 } = args as LinkedinManagementConversationsPayload;
+  const requestData: {
+    timeout: number;
+    account_id: string;
+    connected_after?: number;
+    count?: number;
+  } = {
+    timeout: Number(timeout),
+    account_id: ACCOUNT_ID!
+  };
+  if (connected_after != null) {
+    requestData.connected_after = Number(connected_after);
+  }
+  if (count != null) {
+    requestData.count = Number(count);
+  }
+  log("Starting LinkedIn conversations lookup");
+  try {
+    // Changed from GET to using default POST
+    const response = await makeRequest(API_CONFIG.ENDPOINTS.CONVERSATIONS, requestData);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "application/json",
+          text: JSON.stringify(response, null, 2)
+        }
+      ]
+    };
+  } catch (error) {
+    log("LinkedIn conversations lookup error:", error);
+    return {
+      content: [
+        {
+          type: "text",
+          mimeType: "text/plain",
+          text: `LinkedIn conversations API error: ${formatError(error)}`
+        }
+      ],
+      isError: true
+    };
+  }
+}
 
       case "google_search": {
           if (!isValidGoogleSearchPayload(args)) {
