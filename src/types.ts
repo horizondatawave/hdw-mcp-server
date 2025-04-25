@@ -353,10 +353,8 @@ export function isValidSendLinkedinPostArgs(
   if (typeof args !== "object" || args === null) return false;
   const obj = args as Record<string, unknown>;
 
-  // Проверка обязательного поля text
   if (typeof obj.text !== "string" || !obj.text.trim()) return false;
 
-  // Проверка опциональных полей
   if (obj.visibility !== undefined &&
       obj.visibility !== "ANYONE" &&
       obj.visibility !== "CONNECTIONS_ONLY") return false;
@@ -377,10 +375,8 @@ export function isValidLinkedinSalesNavigatorSearchUsersArgs(
   if (typeof args !== "object" || args === null) return false;
   const obj = args as Record<string, unknown>;
 
-  // Проверка обязательного поля count
   if (typeof obj.count !== "number" || obj.count <= 0 || obj.count > 2500) return false;
 
-  // Проверка опциональных полей
   if (obj.keywords !== undefined && typeof obj.keywords !== "string") return false;
 
   if (obj.first_names !== undefined) {
