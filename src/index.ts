@@ -241,6 +241,7 @@ const GET_CHAT_MESSAGES_TOOL: Tool = {
     type: "object",
     properties: {
       user: { type: "string", description: "User URN for filtering messages (must include prefix, e.g. fsd_profile:ACoAA...)" },
+      company: { type: "string", description: "Company URN where the account is admin (format: company:123456)", default: undefined },
       count: { type: "number", description: "Max messages to return", default: 20 },
       timeout: { type: "number", description: "Timeout in seconds", default: 300 }
     },
@@ -255,6 +256,7 @@ const SEND_CHAT_MESSAGE_TOOL: Tool = {
     type: "object",
     properties: {
       user: { type: "string", description: "Recipient user URN (must include prefix, e.g. fsd_profile:ACoAA...)" },
+      company: { type: "string", description: "Company URN where the account is admin (format: company:123456)", default: undefined },
       text: { type: "string", description: "Message text" },
       timeout: { type: "number", description: "Timeout in seconds", default: 300 }
     },
@@ -876,53 +878,55 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_linkedin_chat_messages": {
-  if (!isValidLinkedinChatMessagesArgs(args)) {
-    throw new McpError(ErrorCode.InvalidParams, "Invalid chat messages arguments");
-  }
-  const { user, count = 20, timeout = 300 } = args as LinkedinChatMessagesArgs;
-  const normalizedUser = normalizeUserURN(user);
-  if (!isValidUserURN(normalizedUser)) {
-    throw new McpError(ErrorCode.InvalidParams, "Invalid URN format. Must start with 'fsd_profile:'");
-  }
-  const requestData = { timeout, user: normalizedUser, count, account_id: ACCOUNT_ID };
-  log("Starting LinkedIn chat messages lookup for user:", normalizedUser);
-  try {
-    // Changed from GET to using default POST
-    const response = await makeRequest(API_CONFIG.ENDPOINTS.CHAT_MESSAGES, requestData);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "application/json",
-          text: JSON.stringify(response, null, 2)
+        if (!isValidLinkedinChatMessagesArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid chat messages arguments");
         }
-      ]
-    };
-  } catch (error) {
-    log("LinkedIn chat messages lookup error:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "text/plain",
-          text: `LinkedIn chat messages API error: ${formatError(error)}`
+        const { user, company, count = 20, timeout = 300 } = args as LinkedinChatMessagesArgs;
+        const normalizedUser = normalizeUserURN(user);
+        if (!isValidUserURN(normalizedUser)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid URN format. Must start with 'fsd_profile:'");
         }
-      ],
-      isError: true
-    };
-  }
-}
+        const requestData: any = { timeout, user: normalizedUser, count, account_id: ACCOUNT_ID };
+        if (company) requestData.company = company;
+        log("Starting LinkedIn chat messages lookup for user:", normalizedUser);
+        try {
+          // Changed from GET to using default POST
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.CHAT_MESSAGES, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn chat messages lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn chat messages API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
 
       case "send_linkedin_chat_message": {
         if (!isValidSendLinkedinChatMessageArgs(args)) {
           throw new McpError(ErrorCode.InvalidParams, "Invalid parameters for sending chat message");
         }
-        const { user, text, timeout = 300 } = args as SendLinkedinChatMessageArgs;
+        const { user, company, text, timeout = 300 } = args as SendLinkedinChatMessageArgs;
         const normalizedUser = normalizeUserURN(user);
         if (!isValidUserURN(normalizedUser)) {
           throw new McpError(ErrorCode.InvalidParams, "Invalid URN format. Must start with 'fsd_profile:'");
         }
-        const requestData = { timeout, user: normalizedUser, text, account_id: ACCOUNT_ID };
+        const requestData: any = { timeout, user: normalizedUser, text, account_id: ACCOUNT_ID };
+        if (company) requestData.company = company;
         log("Starting LinkedIn send chat message for user:", normalizedUser);
         try {
           const response = await makeRequest(API_CONFIG.ENDPOINTS.CHAT_MESSAGE, requestData, "POST");
@@ -1084,52 +1088,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get_linkedin_user_connections": {
-  if (!isValidGetLinkedinUserConnectionsArgs(args)) {
-    throw new McpError(ErrorCode.InvalidParams, "Invalid user connections arguments");
-  }
-  const { connected_after, count = 20, timeout = 300 } = args as GetLinkedinUserConnectionsArgs;
-  const requestData: {
-    timeout: number;
-    account_id: string;
-    connected_after?: number;
-    count?: number;
-  } = {
-    timeout: Number(timeout),
-    account_id: ACCOUNT_ID!
-  };
-  if (connected_after != null) {
-    requestData.connected_after = Number(connected_after);
-  }
-  if (count != null) {
-    requestData.count = Number(count);
-  }
-  log("Starting LinkedIn user connections lookup");
-  try {
-    // Changed from GET to using default POST
-    const response = await makeRequest(API_CONFIG.ENDPOINTS.USER_CONNECTIONS, requestData);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "application/json",
-          text: JSON.stringify(response, null, 2)
+        if (!isValidGetLinkedinUserConnectionsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid user connections arguments");
         }
-      ]
-    };
-  } catch (error) {
-    log("LinkedIn user connections lookup error:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "text/plain",
-          text: `LinkedIn user connections API error: ${formatError(error)}`
+        const { connected_after, count = 20, timeout = 300 } = args as GetLinkedinUserConnectionsArgs;
+        const requestData: {
+          timeout: number;
+          account_id: string;
+          connected_after?: number;
+          count?: number;
+        } = {
+          timeout: Number(timeout),
+          account_id: ACCOUNT_ID!
+        };
+        if (connected_after != null) {
+          requestData.connected_after = Number(connected_after);
         }
-      ],
-      isError: true
-    };
-  }
-}
+        if (count != null) {
+          requestData.count = Number(count);
+        }
+        log("Starting LinkedIn user connections lookup");
+        try {
+          // Changed from GET to using default POST
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.USER_CONNECTIONS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn user connections lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn user connections API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
 
       case "get_linkedin_post_reposts": {
         if (!isValidGetLinkedinPostRepostsArgs(args)) {
@@ -1334,202 +1338,200 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "linkedin_sn_search_users": {
-  if (!isValidLinkedinSalesNavigatorSearchUsersArgs(args)) {
-    throw new McpError(ErrorCode.InvalidParams, "Invalid LinkedIn Sales Navigator search arguments");
-  }
-
-  const {
-    keywords,
-    first_names,
-    last_names,
-    current_titles,
-    location,
-    education,
-    languages,
-    past_titles,
-    functions,
-    levels,
-    years_in_the_current_company,
-    years_in_the_current_position,
-    company_sizes,
-    company_types,
-    company_locations,
-    current_companies,
-    past_companies,
-    industry,
-    count,
-    timeout = 300
-  } = args as LinkedinSalesNavigatorSearchUsersArgs;
-
-  const requestData: Record<string, any> = {
-    count,
-    timeout
-  };
-
-  if (keywords) requestData.keywords = keywords;
-  if (first_names) requestData.first_names = first_names;
-  if (last_names) requestData.last_names = last_names;
-  if (current_titles) requestData.current_titles = current_titles;
-
-  if (location) {
-    requestData.location = typeof location === "string" && location.includes("geo:")
-      ? [{ type: "geo", value: location.replace("geo:", "") }]
-      : location;
-  }
-
-  if (education) {
-    requestData.education = typeof education === "string" && education.includes("company:")
-      ? [{ type: "company", value: education.replace("company:", "") }]
-      : education;
-  }
-
-  if (languages) requestData.languages = languages;
-  if (past_titles) requestData.past_titles = past_titles;
-  if (functions) requestData.functions = functions;
-  if (levels) requestData.levels = levels;
-  if (years_in_the_current_company) requestData.years_in_the_current_company = years_in_the_current_company;
-  if (years_in_the_current_position) requestData.years_in_the_current_position = years_in_the_current_position;
-  if (company_sizes) requestData.company_sizes = company_sizes;
-  if (company_types) requestData.company_types = company_types;
-
-  if (company_locations) {
-    requestData.company_locations = typeof company_locations === "string" && company_locations.includes("geo:")
-      ? [{ type: "geo", value: company_locations.replace("geo:", "") }]
-      : company_locations;
-  }
-
-  if (current_companies) {
-    requestData.current_companies = typeof current_companies === "string" && current_companies.includes("company:")
-      ? [{ type: "company", value: current_companies.replace("company:", "") }]
-      : current_companies;
-  }
-
-  if (past_companies) {
-    requestData.past_companies = typeof past_companies === "string" && past_companies.includes("company:")
-      ? [{ type: "company", value: past_companies.replace("company:", "") }]
-      : past_companies;
-  }
-
-  if (industry) {
-    requestData.industry = typeof industry === "string" && industry.includes("industry:")
-      ? [{ type: "industry", value: industry.replace("industry:", "") }]
-      : industry;
-  }
-
-  log("Starting LinkedIn Sales Navigator users search with filters");
-  try {
-    const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_SN_SEARCH_USERS, requestData);
-    log(`Search complete, found ${response.length} results`);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "application/json",
-          text: JSON.stringify(response, null, 2)
+        if (!isValidLinkedinSalesNavigatorSearchUsersArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid LinkedIn Sales Navigator search arguments");
         }
-      ]
-    };
-  } catch (error) {
-    log("LinkedIn Sales Navigator search error:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "text/plain",
-          text: `LinkedIn Sales Navigator search API error: ${formatError(error)}`
+
+        const {
+          keywords,
+          first_names,
+          last_names,
+          current_titles,
+          location,
+          education,
+          languages,
+          past_titles,
+          functions,
+          levels,
+          years_in_the_current_company,
+          years_in_the_current_position,
+          company_sizes,
+          company_types,
+          company_locations,
+          current_companies,
+          past_companies,
+          industry,
+          count,
+          timeout = 300
+        } = args as LinkedinSalesNavigatorSearchUsersArgs;
+
+        const requestData: Record<string, any> = {
+          count,
+          timeout
+        };
+
+        if (keywords) requestData.keywords = keywords;
+        if (first_names) requestData.first_names = first_names;
+        if (last_names) requestData.last_names = last_names;
+        if (current_titles) requestData.current_titles = current_titles;
+
+        if (location) {
+          requestData.location = typeof location === "string" && location.includes("geo:")
+            ? [{ type: "geo", value: location.replace("geo:", "") }]
+            : location;
         }
-      ],
-      isError: true
-    };
-  }
-}
 
+        if (education) {
+          requestData.education = typeof education === "string" && education.includes("company:")
+            ? [{ type: "company", value: education.replace("company:", "") }]
+            : education;
+        }
 
+        if (languages) requestData.languages = languages;
+        if (past_titles) requestData.past_titles = past_titles;
+        if (functions) requestData.functions = functions;
+        if (levels) requestData.levels = levels;
+        if (years_in_the_current_company) requestData.years_in_the_current_company = years_in_the_current_company;
+        if (years_in_the_current_position) requestData.years_in_the_current_position = years_in_the_current_position;
+        if (company_sizes) requestData.company_sizes = company_sizes;
+        if (company_types) requestData.company_types = company_types;
+
+        if (company_locations) {
+          requestData.company_locations = typeof company_locations === "string" && company_locations.includes("geo:")
+            ? [{ type: "geo", value: company_locations.replace("geo:", "") }]
+            : company_locations;
+        }
+
+        if (current_companies) {
+          requestData.current_companies = typeof current_companies === "string" && current_companies.includes("company:")
+            ? [{ type: "company", value: current_companies.replace("company:", "") }]
+            : current_companies;
+        }
+
+        if (past_companies) {
+          requestData.past_companies = typeof past_companies === "string" && past_companies.includes("company:")
+            ? [{ type: "company", value: past_companies.replace("company:", "") }]
+            : past_companies;
+        }
+
+        if (industry) {
+          requestData.industry = typeof industry === "string" && industry.includes("industry:")
+            ? [{ type: "industry", value: industry.replace("industry:", "") }]
+            : industry;
+        }
+
+        log("Starting LinkedIn Sales Navigator users search with filters");
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_SN_SEARCH_USERS, requestData);
+          log(`Search complete, found ${response.length} results`);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn Sales Navigator search error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn Sales Navigator search API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
 
       case "get_linkedin_conversations": {
-  if (!isValidLinkedinManagementConversationsArgs(args)) {
-    throw new McpError(ErrorCode.InvalidParams, "Invalid conversations arguments");
-  }
-  const { connected_after, count = 20, timeout = 300 } = args as LinkedinManagementConversationsPayload;
-  const requestData: {
-    timeout: number;
-    account_id: string;
-    connected_after?: number;
-    count?: number;
-  } = {
-    timeout: Number(timeout),
-    account_id: ACCOUNT_ID!
-  };
-  if (connected_after != null) {
-    requestData.connected_after = Number(connected_after);
-  }
-  if (count != null) {
-    requestData.count = Number(count);
-  }
-  log("Starting LinkedIn conversations lookup");
-  try {
-    // Changed from GET to using default POST
-    const response = await makeRequest(API_CONFIG.ENDPOINTS.CONVERSATIONS, requestData);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "application/json",
-          text: JSON.stringify(response, null, 2)
+        if (!isValidLinkedinManagementConversationsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid conversations arguments");
         }
-      ]
-    };
-  } catch (error) {
-    log("LinkedIn conversations lookup error:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          mimeType: "text/plain",
-          text: `LinkedIn conversations API error: ${formatError(error)}`
+        const { connected_after, count = 20, timeout = 300 } = args as LinkedinManagementConversationsPayload;
+        const requestData: {
+          timeout: number;
+          account_id: string;
+          connected_after?: number;
+          count?: number;
+        } = {
+          timeout: Number(timeout),
+          account_id: ACCOUNT_ID!
+        };
+        if (connected_after != null) {
+          requestData.connected_after = Number(connected_after);
         }
-      ],
-      isError: true
-    };
-  }
-}
+        if (count != null) {
+          requestData.count = Number(count);
+        }
+        log("Starting LinkedIn conversations lookup");
+        try {
+          // Changed from GET to using default POST
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.CONVERSATIONS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn conversations lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn conversations API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
 
       case "google_search": {
-          if (!isValidGoogleSearchPayload(args)) {
-            throw new McpError(ErrorCode.InvalidParams, "Invalid Google search arguments");
-          }
-          const { query, count = 10, timeout = 300 } = args as GoogleSearchPayload;
-          const requestData = {
-            timeout,
-            query,
-            count: Math.min(Math.max(1, count), 20) // Ensure count is between 1 and 20
+        if (!isValidGoogleSearchPayload(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Google search arguments");
+        }
+        const { query, count = 10, timeout = 300 } = args as GoogleSearchPayload;
+        const requestData = {
+          timeout,
+          query,
+          count: Math.min(Math.max(1, count), 20) // Ensure count is between 1 and 20
+        };
+        log(`Starting Google search for: ${query}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.GOOGLE_SEARCH, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
           };
-          log(`Starting Google search for: ${query}`);
-          try {
-            const response = await makeRequest(API_CONFIG.ENDPOINTS.GOOGLE_SEARCH, requestData);
-            return {
-              content: [
-                {
-                  type: "text",
-                  mimeType: "application/json",
-                  text: JSON.stringify(response, null, 2)
-                }
-              ]
-            };
-          } catch (error) {
-            log("Google search error:", error);
-            return {
-              content: [
-                {
-                  type: "text",
-                  mimeType: "text/plain",
-                  text: `Google search API error: ${formatError(error)}`
-                }
-              ],
-              isError: true
-            };
-          }
-          }
+        } catch (error) {
+          log("Google search error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Google search API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
 
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

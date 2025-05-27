@@ -42,12 +42,14 @@ export interface LinkedinUserReactionsArgs {
 
 export interface LinkedinChatMessagesArgs {
   user: string;
+  company?: string;
   count?: number;
   timeout?: number;
 }
 
 export interface SendLinkedinChatMessageArgs {
   user: string;
+  company?: string;
   text: string;
   timeout?: number;
 }
@@ -226,6 +228,7 @@ export function isValidLinkedinChatMessagesArgs(
   if (typeof args !== "object" || args === null) return false;
   const obj = args as Record<string, unknown>;
   if (typeof obj.user !== "string" || !obj.user.trim()) return false;
+  if (obj.company !== undefined && typeof obj.company !== "string") return false;
   if (obj.count !== undefined && typeof obj.count !== "number") return false;
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
   return true;
@@ -237,6 +240,7 @@ export function isValidSendLinkedinChatMessageArgs(
   if (typeof args !== "object" || args === null) return false;
   const obj = args as Record<string, unknown>;
   if (typeof obj.user !== "string" || !obj.user.trim()) return false;
+  if (obj.company !== undefined && typeof obj.company !== "string") return false;
   if (typeof obj.text !== "string" || !obj.text.trim()) return false;
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
   return true;
