@@ -147,6 +147,27 @@ export interface GoogleSearchPayload {
   timeout?: number;
 }
 
+export interface LinkedinSearchPostsArgs {
+  timeout?: number;
+  keywords?: string;
+  sort?: "relevance";
+  date_posted?: "past-month" | "past-week" | "past-24h";
+  content_type?: "videos" | "photos" | "jobs" | "live_videos" | "documents" | null;
+  mentioned?: string[] | null;
+  authors?: string[] | null;
+  author_industries?: string[] | string | null;
+  author_title?: string | null;
+  count: number;
+}
+
+export interface RedditSearchPostsArgs {
+  timeout?: number;
+  query: string;
+  sort?: "relevance" | "hot" | "top" | "new" | "comments";
+  time_filter?: "all" | "year" | "month" | "week" | "day" | "hour";
+  count: number;
+}
+
 export function isValidLinkedinSearchUsersArgs(
   args: unknown
 ): args is LinkedinSearchUsersArgs {
@@ -539,6 +560,70 @@ export function isValidGoogleSearchPayload(
   if (typeof obj.query !== "string" || !obj.query.trim()) return false;
   if (obj.count !== undefined && (typeof obj.count !== "number" || obj.count <= 0 || obj.count > 20)) return false;
   if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidLinkedinSearchPostsArgs(
+  args: unknown
+): args is LinkedinSearchPostsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.count !== "number" || obj.count <= 0) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+  if (obj.keywords !== undefined && typeof obj.keywords !== "string") return false;
+  
+  if (obj.sort !== undefined && obj.sort !== "relevance") return false;
+  
+  if (obj.date_posted !== undefined && 
+      obj.date_posted !== "past-month" && 
+      obj.date_posted !== "past-week" && 
+      obj.date_posted !== "past-24h") return false;
+  
+  if (obj.content_type !== undefined && obj.content_type !== null &&
+      obj.content_type !== "videos" && 
+      obj.content_type !== "photos" && 
+      obj.content_type !== "jobs" && 
+      obj.content_type !== "live_videos" && 
+      obj.content_type !== "documents") return false;
+
+  if (obj.mentioned !== undefined && obj.mentioned !== null && !Array.isArray(obj.mentioned)) return false;
+  if (obj.authors !== undefined && obj.authors !== null && !Array.isArray(obj.authors)) return false;
+  
+  if (obj.author_industries !== undefined && obj.author_industries !== null) {
+    if (typeof obj.author_industries !== "string" && !Array.isArray(obj.author_industries)) return false;
+  }
+  
+  if (obj.author_title !== undefined && obj.author_title !== null && typeof obj.author_title !== "string") return false;
+
+  return true;
+}
+
+export function isValidRedditSearchPostsArgs(
+  args: unknown
+): args is RedditSearchPostsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.query !== "string" || !obj.query.trim()) return false;
+  if (typeof obj.count !== "number" || obj.count <= 0) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+  
+  if (obj.sort !== undefined && 
+      obj.sort !== "relevance" && 
+      obj.sort !== "hot" && 
+      obj.sort !== "top" && 
+      obj.sort !== "new" && 
+      obj.sort !== "comments") return false;
+  
+  if (obj.time_filter !== undefined && 
+      obj.time_filter !== "all" && 
+      obj.time_filter !== "year" && 
+      obj.time_filter !== "month" && 
+      obj.time_filter !== "week" && 
+      obj.time_filter !== "day" && 
+      obj.time_filter !== "hour") return false;
 
   return true;
 }
