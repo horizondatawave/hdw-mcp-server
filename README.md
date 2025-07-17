@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/horizondatawave-hdw-mcp-server-badge.png)](https://mseep.ai/app/horizondatawave-hdw-mcp-server)
+
 # HDW MCP Server
 [![smithery badge](https://smithery.ai/badge/@horizondatawave/hdw-mcp-server)](https://smithery.ai/server/@horizondatawave/hdw-mcp-server)
 
