@@ -40,6 +40,13 @@ export interface LinkedinUserReactionsArgs {
   timeout?: number;
 }
 
+export interface LinkedinUserCommentsArgs {
+  urn: string;
+  count?: number;
+  timeout?: number;
+  commented_after?: number;
+}
+
 export interface LinkedinChatMessagesArgs {
   user: string;
   company?: string;
@@ -202,6 +209,91 @@ export interface RedditPost {
   spoiler: boolean;
 }
 
+// LinkedIn User Comments types
+export interface LinkedinURN {
+  type: string;
+  value: string;
+}
+
+export interface LinkedinReaction {
+  "@type": "LinkedinReaction";
+  type: "like" | "love" | "insightful" | "curious" | "celebrate" | "support";
+  count: number;
+}
+
+export interface LinkedinUserCommentUser {
+  "@type": "LinkedinUserCommentUser";
+  internal_id: LinkedinURN;
+  urn: LinkedinURN;
+  name: string;
+  alias: string;
+  url: string;
+  image: string;
+  headline: string;
+}
+
+export interface LinkedinUserPostUser {
+  "@type": "LinkedinUserPostUser";
+  internal_id: LinkedinURN;
+  urn: LinkedinURN;
+  name: string;
+  alias: string;
+  url: string;
+  headline: string;
+  image: string;
+}
+
+export interface LinkedinUserPostEvent {
+  "@type": "LinkedinUserPostEvent";
+  url: string;
+  image: string;
+  title: string;
+  date: string;
+  participant_count: number;
+}
+
+export interface LinkedinUserPostArticle {
+  "@type": "LinkedinUserPostArticle";
+  url: string;
+  urn: LinkedinURN;
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+}
+
+export interface LinkedinUserPost {
+  "@type": "LinkedinUserPost";
+  urn: LinkedinURN;
+  url: string;
+  author: LinkedinUserPostUser;
+  created_at: number;
+  share_urn: LinkedinURN;
+  is_empty_repost: boolean;
+  repost: any; // Can be complex nested structure
+  images: string[];
+  text: string;
+  comment_count: number;
+  share_count: number;
+  reactions: LinkedinReaction[];
+  event?: LinkedinUserPostEvent;
+  article?: LinkedinUserPostArticle;
+}
+
+export interface LinkedinUserComment {
+  "@type": "LinkedinUserComment";
+  urn: LinkedinURN;
+  url: string;
+  text: string;
+  author: LinkedinUserCommentUser;
+  created_at: number;
+  is_commenter_post_author: boolean;
+  comment_count: number;
+  reactions: LinkedinReaction[];
+  parent?: LinkedinURN;
+  post: LinkedinUserPost;
+}
+
 export function isValidLinkedinSearchUsersArgs(
   args: unknown
 ): args is LinkedinSearchUsersArgs {
@@ -274,6 +366,18 @@ export function isValidLinkedinUserReactionsArgs(
   if (typeof obj.urn !== "string" || !obj.urn.trim()) return false;
   if (obj.count !== undefined && typeof obj.count !== "number") return false;
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+  return true;
+}
+
+export function isValidLinkedinUserCommentsArgs(
+  args: unknown
+): args is LinkedinUserCommentsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+  if (typeof obj.urn !== "string" || !obj.urn.trim()) return false;
+  if (obj.count !== undefined && typeof obj.count !== "number") return false;
+  if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+  if (obj.commented_after !== undefined && typeof obj.commented_after !== "number") return false;
   return true;
 }
 

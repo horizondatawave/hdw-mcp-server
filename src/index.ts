@@ -19,6 +19,7 @@ import {
   LinkedinEmailUserArgs,
   LinkedinUserPostsArgs,
   LinkedinUserReactionsArgs,
+  LinkedinUserCommentsArgs,
   LinkedinChatMessagesArgs,
   SendLinkedinChatMessageArgs,
   SendLinkedinConnectionArgs,
@@ -41,6 +42,7 @@ import {
   isValidLinkedinEmailUserArgs,
   isValidLinkedinUserPostsArgs,
   isValidLinkedinUserReactionsArgs,
+  isValidLinkedinUserCommentsArgs,
   isValidLinkedinChatMessagesArgs,
   isValidSendLinkedinChatMessageArgs,
   isValidSendLinkedinConnectionArgs,
@@ -92,6 +94,7 @@ const API_CONFIG = {
     LINKEDIN_EMAIL: "/api/linkedin/email/user",
     LINKEDIN_USER_POSTS: "/api/linkedin/user/posts",
     LINKEDIN_USER_REACTIONS: "/api/linkedin/user/reactions",
+    LINKEDIN_USER_COMMENTS: "/api/linkedin/user/comments",
     LINKEDIN_SEARCH_POSTS: "/api/linkedin/search/posts",
     REDDIT_SEARCH_POSTS: "/api/reddit/search/posts",
     CHAT_MESSAGES: "/api/linkedin/management/chat/messages",
@@ -238,6 +241,21 @@ const GET_LINKEDIN_USER_REACTIONS_TOOL: Tool = {
       urn: { type: "string", description: "User URN (must include prefix, example: fsd_profile:ACoAA...)" },
       count: { type: "number", description: "Max reactions", default: 10 },
       timeout: { type: "number", description: "Timeout in seconds", default: 300 }
+    },
+    required: ["urn"]
+  }
+};
+
+const GET_LINKEDIN_USER_COMMENTS_TOOL: Tool = {
+  name: "get_linkedin_user_comments",
+  description: "Get LinkedIn comments for a user by URN (must include prefix, example: fsd_profile:ACoAA...)",
+  inputSchema: {
+    type: "object",
+    properties: {
+      urn: { type: "string", description: "User URN (must include prefix, example: fsd_profile:ACoAA...)" },
+      count: { type: "number", description: "Max comments", default: 10 },
+      timeout: { type: "number", description: "Timeout in seconds", default: 300 },
+      commented_after: { type: "number", description: "Filter comments that created after the specified date. Accepts timestamp" }
     },
     required: ["urn"]
   }
@@ -706,6 +724,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_LINKEDIN_EMAIL_TOOL,
     GET_LINKEDIN_USER_POSTS_TOOL,
     GET_LINKEDIN_USER_REACTIONS_TOOL,
+    GET_LINKEDIN_USER_COMMENTS_TOOL,
     LINKEDIN_SEARCH_POSTS_TOOL,
     REDDIT_SEARCH_POSTS_TOOL,
     GET_CHAT_MESSAGES_TOOL,
@@ -939,6 +958,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 type: "text",
                 mimeType: "text/plain",
                 text: `LinkedIn user reactions API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_linkedin_user_comments": {
+        if (!isValidLinkedinUserCommentsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid user comments arguments");
+        }
+        const { urn, count = 10, timeout = 300, commented_after } = args as LinkedinUserCommentsArgs;
+        const normalizedURN = normalizeUserURN(urn);
+        if (!isValidUserURN(normalizedURN)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid URN format. Must start with 'fsd_profile:'");
+        }
+        log("Starting LinkedIn user comments lookup for urn:", normalizedURN);
+        const requestData: any = { timeout, urn: normalizedURN, count };
+        if (commented_after !== undefined) {
+          requestData.commented_after = commented_after;
+        }
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_USER_COMMENTS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn user comments lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn user comments API error: ${formatError(error)}`
               }
             ],
             isError: true
