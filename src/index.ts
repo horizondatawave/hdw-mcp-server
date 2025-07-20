@@ -26,6 +26,7 @@ import {
   GetLinkedinUserConnectionsArgs,
   GetLinkedinPostRepostsArgs,
   GetLinkedinPostCommentsArgs,
+  GetLinkedinPostReactionsArgs,
   GetLinkedinGoogleCompanyArgs,
   GetLinkedinCompanyArgs,
   GetLinkedinCompanyEmployeesArgs,
@@ -33,6 +34,8 @@ import {
   LinkedinSalesNavigatorSearchUsersArgs,
   LinkedinManagementConversationsPayload,
   GoogleSearchPayload,
+  LinkedinSearchPostsArgs,
+  RedditSearchPostsArgs,
   isValidLinkedinSearchUsersArgs,
   isValidLinkedinUserProfileArgs,
   isValidLinkedinEmailUserArgs,
@@ -45,13 +48,16 @@ import {
   isValidGetLinkedinUserConnectionsArgs,
   isValidGetLinkedinPostRepostsArgs,
   isValidGetLinkedinPostCommentsArgs,
+  isValidGetLinkedinPostReactionsArgs,
   isValidGetLinkedinGoogleCompanyArgs,
   isValidGetLinkedinCompanyArgs,
   isValidGetLinkedinCompanyEmployeesArgs,
   isValidSendLinkedinPostArgs,
   isValidLinkedinSalesNavigatorSearchUsersArgs,
   isValidLinkedinManagementConversationsArgs,
-  isValidGoogleSearchPayload
+  isValidGoogleSearchPayload,
+  isValidLinkedinSearchPostsArgs,
+  isValidRedditSearchPostsArgs
 } from "./types.js";
 
 try {
@@ -86,6 +92,8 @@ const API_CONFIG = {
     LINKEDIN_EMAIL: "/api/linkedin/email/user",
     LINKEDIN_USER_POSTS: "/api/linkedin/user/posts",
     LINKEDIN_USER_REACTIONS: "/api/linkedin/user/reactions",
+    LINKEDIN_SEARCH_POSTS: "/api/linkedin/search/posts",
+    REDDIT_SEARCH_POSTS: "/api/reddit/search/posts",
     CHAT_MESSAGES: "/api/linkedin/management/chat/messages",
     CHAT_MESSAGE: "/api/linkedin/management/chat/message",
     USER_CONNECTION: "/api/linkedin/management/user/connection",
@@ -94,6 +102,7 @@ const API_CONFIG = {
     LINKEDIN_POST: "/api/linkedin/management/post",
     LINKEDIN_POST_REPOSTS: "/api/linkedin/post/reposts",
     LINKEDIN_POST_COMMENTS: "/api/linkedin/post/comments",
+    LINKEDIN_POST_REACTIONS: "/api/linkedin/post/reactions",
     LINKEDIN_GOOGLE_COMPANY: "/api/linkedin/google/company",
     LINKEDIN_COMPANY: "/api/linkedin/company",
     LINKEDIN_COMPANY_EMPLOYEES: "/api/linkedin/company/employees",
@@ -362,6 +371,20 @@ const GET_LINKEDIN_POST_COMMENTS_TOOL: Tool = {
   }
 };
 
+const GET_LINKEDIN_POST_REACTIONS_TOOL: Tool = {
+  name: "get_linkedin_post_reactions",
+  description: "Get LinkedIn reactions for a post by URN",
+  inputSchema: {
+    type: "object",
+    properties: {
+      urn: { type: "string", description: "Post URN, only activity urn type is allowed (example: activity:7234173400267538433)" },
+      count: { type: "number", description: "Max reactions to return", default: 50 },
+      timeout: { type: "number", description: "Timeout in seconds", default: 300 }
+    },
+    required: ["urn", "count"]
+  }
+};
+
 const GET_LINKEDIN_GOOGLE_COMPANY_TOOL: Tool = {
   name: "get_linkedin_google_company",
   description: "Search for LinkedIn companies using Google search. First result is usually the best match.",
@@ -603,6 +626,49 @@ const GOOGLE_SEARCH_TOOL: Tool = {
   }
 };
 
+const LINKEDIN_SEARCH_POSTS_TOOL: Tool = {
+  name: "search_linkedin_posts",
+  description: "Search for LinkedIn posts with various filters like keywords, content type, authors, etc.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      keywords: { type: "string", description: "Any keyword for searching in the post. For exact search put desired keywords into brackets", default: "" },
+      sort: { type: "string", description: "Sort type", enum: ["relevance"], default: "relevance" },
+      date_posted: { type: "string", description: "Date posted", enum: ["past-month", "past-week", "past-24h"], default: "past-month" },
+      content_type: { type: "string", description: "Desired content type", enum: ["videos", "photos", "jobs", "live_videos", "documents"] },
+      mentioned: { type: "array", items: { type: "string" }, description: "Mentioned users URN in posts" },
+      authors: { type: "array", items: { type: "string" }, description: "Authors URN of posts" },
+      author_industries: { 
+        oneOf: [
+          { type: "array", items: { type: "string" } },
+          { type: "string" }
+        ], 
+        description: "Industry URN, can be obtained in /linkedin/search/industries. Or industry name." 
+      },
+      author_title: { type: "string", description: "Author job title." },
+      count: { type: "number", description: "Max result count" },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["count"]
+  }
+};
+
+const REDDIT_SEARCH_POSTS_TOOL: Tool = {
+  name: "search_reddit_posts",
+  description: "Search for Reddit posts with various filters",
+  inputSchema: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "Main search query" },
+      sort: { type: "string", description: "Type of search results sorting", enum: ["relevance", "hot", "top", "new", "comments"], default: "relevance" },
+      time_filter: { type: "string", description: "Time filter for search results", enum: ["all", "year", "month", "week", "day", "hour"], default: "all" },
+      count: { type: "number", description: "Max result count" },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["query", "count"]
+  }
+};
+
 const server = new Server(
   { name: "hdw-mcp", version: "0.1.0" },
   {
@@ -640,6 +706,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_LINKEDIN_EMAIL_TOOL,
     GET_LINKEDIN_USER_POSTS_TOOL,
     GET_LINKEDIN_USER_REACTIONS_TOOL,
+    LINKEDIN_SEARCH_POSTS_TOOL,
+    REDDIT_SEARCH_POSTS_TOOL,
     GET_CHAT_MESSAGES_TOOL,
     SEND_CHAT_MESSAGE_TOOL,
     SEND_CONNECTION_REQUEST_TOOL,
@@ -647,6 +715,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_USER_CONNECTIONS_TOOL,
     GET_LINKEDIN_POST_REPOSTS_TOOL,
     GET_LINKEDIN_POST_COMMENTS_TOOL,
+    GET_LINKEDIN_POST_REACTIONS_TOOL,
     GET_LINKEDIN_GOOGLE_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_EMPLOYEES_TOOL,
@@ -1210,6 +1279,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
       }
 
+      case "get_linkedin_post_reactions": {
+        if (!isValidGetLinkedinPostReactionsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid post reactions arguments");
+        }
+        const { urn, count = 50, timeout = 300 } = args as GetLinkedinPostReactionsArgs;
+        const requestData = {
+          timeout: Number(timeout),
+          urn,
+          count: Number(count)
+        };
+        log(`Starting LinkedIn post reactions lookup for: ${urn}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_POST_REACTIONS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn post reactions lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn post reactions API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
       case "get_linkedin_google_company": {
         if (!isValidGetLinkedinGoogleCompanyArgs(args)) {
           throw new McpError(ErrorCode.InvalidParams, "Invalid Google company search arguments");
@@ -1526,6 +1632,109 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 type: "text",
                 mimeType: "text/plain",
                 text: `Google search API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "search_linkedin_posts": {
+        if (!isValidLinkedinSearchPostsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid LinkedIn search posts arguments");
+        }
+        const {
+          timeout = 300,
+          keywords = "",
+          sort = "relevance",
+          date_posted = "past-month",
+          content_type,
+          mentioned,
+          authors,
+          author_industries,
+          author_title,
+          count
+        } = args as LinkedinSearchPostsArgs;
+        
+        const requestData: any = { timeout, count };
+        if (keywords) requestData.keywords = keywords;
+        if (sort) requestData.sort = sort;
+        if (date_posted) requestData.date_posted = date_posted;
+        if (content_type) requestData.content_type = content_type;
+        if (mentioned) requestData.mentioned = mentioned;
+        if (authors) requestData.authors = authors;
+        if (author_industries) requestData.author_industries = author_industries;
+        if (author_title) requestData.author_title = author_title;
+        
+        log("Starting LinkedIn posts search with:", JSON.stringify(requestData));
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_SEARCH_POSTS, requestData);
+          log(`Search complete, found ${response.length} results`);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn search posts error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn search posts API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "search_reddit_posts": {
+        if (!isValidRedditSearchPostsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Reddit search posts arguments");
+        }
+        const {
+          timeout = 300,
+          query,
+          sort = "relevance",
+          time_filter = "all",
+          count
+        } = args as RedditSearchPostsArgs;
+        
+        const requestData = {
+          timeout,
+          query,
+          sort,
+          time_filter,
+          count
+        };
+        
+        log("Starting Reddit posts search with:", JSON.stringify(requestData));
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.REDDIT_SEARCH_POSTS, requestData);
+          log(`Search complete, found ${response.length} results`);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("Reddit search posts error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Reddit search posts API error: ${formatError(error)}`
               }
             ],
             isError: true
