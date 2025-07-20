@@ -22,6 +22,7 @@ A Model Context Protocol (MCP) server that provides comprehensive access to Link
   - **Company Employees:** Retrieve employees for a given LinkedIn company.
   
 - **Google Search**
+- **Reddit Search:** Search for Reddit posts with various filters including query, sort options, time filters, and result count.
 
 ---
 
@@ -157,6 +158,16 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `companies` (required): Array of company URNs.  
     - `keywords`, `first_name`, `last_name` (optional).  
     - `count` (optional, default: 10).  
+    - `timeout` (optional, default: 300).
+
+17. **Search Reddit Posts**  
+    **Name:** `search_reddit_posts`  
+    **Description:** Search for Reddit posts with various filters.  
+    **Parameters:**  
+    - `query` (required): Main search query.  
+    - `sort` (optional, default: `"relevance"`; allowed values: `"relevance"`, `"hot"`, `"top"`, `"new"`, `"comments"`).  
+    - `time_filter` (optional, default: `"all"`; allowed values: `"all"`, `"year"`, `"month"`, `"week"`, `"day"`, `"hour"`).  
+    - `count` (required): Max result count.  
     - `timeout` (optional, default: 300).
 
 ---

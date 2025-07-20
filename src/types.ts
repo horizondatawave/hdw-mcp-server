@@ -174,6 +174,34 @@ export interface RedditSearchPostsArgs {
   count: number;
 }
 
+export interface RedditSubreddit {
+  "@type": "RedditSubreddit";
+  id: string;
+  alias: string;
+  url: string;
+  icon_url: string;
+  banner_url: string;
+  description: string;
+  member_count: number;
+  online_count: number;
+  nsfw: boolean;
+  quarantined: boolean;
+}
+
+export interface RedditPost {
+  "@type": "RedditPost";
+  id: string;
+  title: string;
+  url: string;
+  created_at: number;
+  subreddit: RedditSubreddit;
+  vote_count: number;
+  comment_count: number;
+  thumbnail_url: string;
+  nsfw: boolean;
+  spoiler: boolean;
+}
+
 export function isValidLinkedinSearchUsersArgs(
   args: unknown
 ): args is LinkedinSearchUsersArgs {
