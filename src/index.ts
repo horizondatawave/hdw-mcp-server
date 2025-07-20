@@ -26,6 +26,7 @@ import {
   GetLinkedinUserConnectionsArgs,
   GetLinkedinPostRepostsArgs,
   GetLinkedinPostCommentsArgs,
+  GetLinkedinPostReactionsArgs,
   GetLinkedinGoogleCompanyArgs,
   GetLinkedinCompanyArgs,
   GetLinkedinCompanyEmployeesArgs,
@@ -47,6 +48,7 @@ import {
   isValidGetLinkedinUserConnectionsArgs,
   isValidGetLinkedinPostRepostsArgs,
   isValidGetLinkedinPostCommentsArgs,
+  isValidGetLinkedinPostReactionsArgs,
   isValidGetLinkedinGoogleCompanyArgs,
   isValidGetLinkedinCompanyArgs,
   isValidGetLinkedinCompanyEmployeesArgs,
@@ -100,6 +102,7 @@ const API_CONFIG = {
     LINKEDIN_POST: "/api/linkedin/management/post",
     LINKEDIN_POST_REPOSTS: "/api/linkedin/post/reposts",
     LINKEDIN_POST_COMMENTS: "/api/linkedin/post/comments",
+    LINKEDIN_POST_REACTIONS: "/api/linkedin/post/reactions",
     LINKEDIN_GOOGLE_COMPANY: "/api/linkedin/google/company",
     LINKEDIN_COMPANY: "/api/linkedin/company",
     LINKEDIN_COMPANY_EMPLOYEES: "/api/linkedin/company/employees",
@@ -362,6 +365,20 @@ const GET_LINKEDIN_POST_COMMENTS_TOOL: Tool = {
       urn: { type: "string", description: "Post URN, only activity urn type is allowed (example: activity:7234173400267538433)" },
       sort: { type: "string", description: "Sort type (relevance or recent)", enum: ["relevance", "recent"], default: "relevance" },
       count: { type: "number", description: "Max comments to return", default: 10 },
+      timeout: { type: "number", description: "Timeout in seconds", default: 300 }
+    },
+    required: ["urn", "count"]
+  }
+};
+
+const GET_LINKEDIN_POST_REACTIONS_TOOL: Tool = {
+  name: "get_linkedin_post_reactions",
+  description: "Get LinkedIn reactions for a post by URN",
+  inputSchema: {
+    type: "object",
+    properties: {
+      urn: { type: "string", description: "Post URN, only activity urn type is allowed (example: activity:7234173400267538433)" },
+      count: { type: "number", description: "Max reactions to return", default: 50 },
       timeout: { type: "number", description: "Timeout in seconds", default: 300 }
     },
     required: ["urn", "count"]
@@ -698,6 +715,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_USER_CONNECTIONS_TOOL,
     GET_LINKEDIN_POST_REPOSTS_TOOL,
     GET_LINKEDIN_POST_COMMENTS_TOOL,
+    GET_LINKEDIN_POST_REACTIONS_TOOL,
     GET_LINKEDIN_GOOGLE_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_TOOL,
     GET_LINKEDIN_COMPANY_EMPLOYEES_TOOL,
@@ -1254,6 +1272,43 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 type: "text",
                 mimeType: "text/plain",
                 text: `LinkedIn post comments API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_linkedin_post_reactions": {
+        if (!isValidGetLinkedinPostReactionsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid post reactions arguments");
+        }
+        const { urn, count = 50, timeout = 300 } = args as GetLinkedinPostReactionsArgs;
+        const requestData = {
+          timeout: Number(timeout),
+          urn,
+          count: Number(count)
+        };
+        log(`Starting LinkedIn post reactions lookup for: ${urn}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_POST_REACTIONS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn post reactions lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn post reactions API error: ${formatError(error)}`
               }
             ],
             isError: true

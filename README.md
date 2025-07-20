@@ -10,7 +10,7 @@ A Model Context Protocol (MCP) server that provides comprehensive access to Link
 - **Profile Lookup:** Retrieve detailed profile information for a LinkedIn user.
 - **Email Lookup:** Find LinkedIn user details by email address.
 - **Posts & Reactions:** Retrieve a user's posts and associated reactions.
-- **Post Reposts & Comments:** Retrieve reposts and comments for a specific LinkedIn post.
+- **Post Reposts, Comments & Reactions:** Retrieve reposts, comments, and reactions for a specific LinkedIn post.
 - **Account Management:**
   - **Chat Functionality:** Retrieve and send chat messages via the LinkedIn management API.
   - **Connection Management:** Send connection invitations to LinkedIn users.
@@ -126,7 +126,15 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (optional, default: 10).  
     - `timeout` (optional, default: 300).
 
-13. **Get LinkedIn Google Company**  
+13. **Get LinkedIn Post Reactions**  
+    **Name:** `get_linkedin_post_reactions`  
+    **Description:** Retrieve reactions for a LinkedIn post.  
+    **Parameters:**  
+    - `urn` (required): Post URN (must start with `activity:`).  
+    - `count` (optional, default: 50).  
+    - `timeout` (optional, default: 300).
+
+14. **Get LinkedIn Google Company**  
     **Name:** `get_linkedin_google_company`  
     **Description:** Search for LinkedIn companies via Google – the first result is typically the best match.  
     **Parameters:**  
@@ -135,14 +143,14 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count_per_keyword` (optional, default: 1; range 1–10).  
     - `timeout` (optional, default: 300).
 
-14. **Get LinkedIn Company**  
+15. **Get LinkedIn Company**  
     **Name:** `get_linkedin_company`  
     **Description:** Retrieve detailed information about a LinkedIn company.  
     **Parameters:**  
     - `company` (required): Company alias, URL, or URN.  
     - `timeout` (optional, default: 300).
 
-15. **Get LinkedIn Company Employees**  
+16. **Get LinkedIn Company Employees**  
     **Name:** `get_linkedin_company_employees`  
     **Description:** Retrieve employees of a LinkedIn company.  
     **Parameters:**  
@@ -240,8 +248,8 @@ Update your Windsurf configuration file (`mcp_config.json`) with the following c
 {
   "mcpServers": {
     "hdw": {
-      "command": "node",
-      "args": ["/path/to/your/build/index.js"],
+      "command": "npx",
+      "args": ["-y","@horizondatawave/mcp"],
       "env": {
         "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
         "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"

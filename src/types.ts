@@ -84,6 +84,12 @@ export interface GetLinkedinPostCommentsArgs {
   timeout?: number;
 }
 
+export interface GetLinkedinPostReactionsArgs {
+  urn: string;
+  count?: number;
+  timeout?: number;
+}
+
 export interface GetLinkedinGoogleCompanyArgs {
   keywords: string[];
   with_urn?: boolean;
@@ -317,6 +323,17 @@ export function isValidGetLinkedinPostCommentsArgs(
   const obj = args as Record<string, unknown>;
   if (typeof obj.urn !== "string" || !obj.urn.includes("activity:")) return false;
   if (obj.sort !== undefined && obj.sort !== "relevance" && obj.sort !== "recent") return false;
+  if (obj.count !== undefined && typeof obj.count !== "number") return false;
+  if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+  return true;
+}
+
+export function isValidGetLinkedinPostReactionsArgs(
+  args: unknown
+): args is GetLinkedinPostReactionsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+  if (typeof obj.urn !== "string" || !obj.urn.includes("activity:")) return false;
   if (obj.count !== undefined && typeof obj.count !== "number") return false;
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
   return true;
