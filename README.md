@@ -1,7 +1,7 @@
 # HDW MCP Server
 [![smithery badge](https://smithery.ai/badge/@horizondatawave/hdw-mcp-server)](https://smithery.ai/server/@horizondatawave/hdw-mcp-server)
 
-A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn data and functionalities using the HorizonDataWave API, enabling not only data retrieval but also robust management of user accounts.
+A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn and Instagram data and functionalities using the HorizonDataWave API, enabling not only data retrieval but also robust management of user accounts.
 ---
 
 ## Features
@@ -23,6 +23,10 @@ A Model Context Protocol (MCP) server that provides comprehensive access to Link
   
 - **Google Search**
 - **Reddit Search:** Search for Reddit posts with various filters including query, sort options, time filters, and result count.
+- **Instagram Data Access:**
+  - **User Profiles:** Get detailed Instagram user information by URL, alias, or ID.
+  - **User Posts:** Retrieve posts from Instagram users.
+  - **Post Comments:** Get comments for specific Instagram posts.
 
 ---
 
@@ -71,7 +75,16 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
    - `count` (optional, default: 10).  
    - `timeout` (optional, default: 300).
 
-6. **Get LinkedIn Chat Messages**  
+6. **Get LinkedIn User Comments**  
+   **Name:** `get_linkedin_user_comments`  
+   **Description:** Retrieve comments for a LinkedIn user by URN.  
+   **Parameters:**  
+   - `urn` (required): User URN (with prefix).  
+   - `count` (optional, default: 10).  
+   - `timeout` (optional, default: 300).  
+   - `commented_after` (optional): Filter comments created after the specified timestamp.
+
+7. **Get LinkedIn Chat Messages**  
    **Name:** `get_linkedin_chat_messages`  
    **Description:** Retrieve top chat messages from the LinkedIn management API.  
    **Parameters:**  
@@ -79,7 +92,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
    - `count` (optional, default: 20).  
    - `timeout` (optional, default: 300).
 
-7. **Send LinkedIn Chat Message**  
+8. **Send LinkedIn Chat Message**  
    **Name:** `send_linkedin_chat_message`  
    **Description:** Send a chat message using the LinkedIn management API.  
    **Parameters:**  
@@ -87,14 +100,14 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
    - `text` (required): Message text.  
    - `timeout` (optional, default: 300).
 
-8. **Send LinkedIn Connection Request**  
+9. **Send LinkedIn Connection Request**  
    **Name:** `send_linkedin_connection`  
    **Description:** Send a connection invitation to a LinkedIn user.  
    **Parameters:**  
    - `user` (required).  
    - `timeout` (optional, default: 300).
 
-9. **Send LinkedIn Post Comment**  
+10. **Send LinkedIn Post Comment**  
    **Name:** `send_linkedin_post_comment`  
    **Description:** Create a comment on a LinkedIn post or reply.  
    **Parameters:**  
@@ -102,7 +115,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
    - `urn` (required): Activity or comment URN.  
    - `timeout` (optional, default: 300).
 
-10. **Get LinkedIn User Connections**  
+11. **Get LinkedIn User Connections**  
     **Name:** `get_linkedin_user_connections`  
     **Description:** Retrieve a list of LinkedIn user connections.  
     **Parameters:**  
@@ -110,7 +123,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (optional, default: 20).  
     - `timeout` (optional, default: 300).
 
-11. **Get LinkedIn Post Reposts**  
+12. **Get LinkedIn Post Reposts**  
     **Name:** `get_linkedin_post_reposts`  
     **Description:** Retrieve reposts for a LinkedIn post.  
     **Parameters:**  
@@ -118,7 +131,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (optional, default: 10).  
     - `timeout` (optional, default: 300).
 
-12. **Get LinkedIn Post Comments**  
+13. **Get LinkedIn Post Comments**  
     **Name:** `get_linkedin_post_comments`  
     **Description:** Retrieve comments for a LinkedIn post.  
     **Parameters:**  
@@ -127,7 +140,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (optional, default: 10).  
     - `timeout` (optional, default: 300).
 
-13. **Get LinkedIn Post Reactions**  
+14. **Get LinkedIn Post Reactions**  
     **Name:** `get_linkedin_post_reactions`  
     **Description:** Retrieve reactions for a LinkedIn post.  
     **Parameters:**  
@@ -135,7 +148,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (optional, default: 50).  
     - `timeout` (optional, default: 300).
 
-14. **Get LinkedIn Google Company**  
+15. **Get LinkedIn Google Company**  
     **Name:** `get_linkedin_google_company`  
     **Description:** Search for LinkedIn companies via Google – the first result is typically the best match.  
     **Parameters:**  
@@ -144,14 +157,14 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count_per_keyword` (optional, default: 1; range 1–10).  
     - `timeout` (optional, default: 300).
 
-15. **Get LinkedIn Company**  
+16. **Get LinkedIn Company**  
     **Name:** `get_linkedin_company`  
     **Description:** Retrieve detailed information about a LinkedIn company.  
     **Parameters:**  
     - `company` (required): Company alias, URL, or URN.  
     - `timeout` (optional, default: 300).
 
-16. **Get LinkedIn Company Employees**  
+17. **Get LinkedIn Company Employees**  
     **Name:** `get_linkedin_company_employees`  
     **Description:** Retrieve employees of a LinkedIn company.  
     **Parameters:**  
@@ -160,7 +173,7 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (optional, default: 10).  
     - `timeout` (optional, default: 300).
 
-17. **Search Reddit Posts**  
+18. **Search Reddit Posts**  
     **Name:** `search_reddit_posts`  
     **Description:** Search for Reddit posts with various filters.  
     **Parameters:**  
@@ -169,6 +182,29 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `time_filter` (optional, default: `"all"`; allowed values: `"all"`, `"year"`, `"month"`, `"week"`, `"day"`, `"hour"`).  
     - `count` (required): Max result count.  
     - `timeout` (optional, default: 300).
+
+19. **Get Instagram User**  
+    **Name:** `get_instagram_user`  
+    **Description:** Get Instagram user information by URL, alias or ID.  
+    **Parameters:**  
+    - `user` (required): User ID, alias or URL.  
+    - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
+
+20. **Get Instagram User Posts**  
+    **Name:** `get_instagram_user_posts`  
+    **Description:** Get Instagram user posts.  
+    **Parameters:**  
+    - `user` (required): User ID, alias or URL.  
+    - `count` (required): Max result count.  
+    - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
+
+21. **Get Instagram Post Comments**  
+    **Name:** `get_instagram_post_comments`  
+    **Description:** Get Instagram post comments.  
+    **Parameters:**  
+    - `post` (required): Post ID.  
+    - `count` (required): Max result count.  
+    - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
 
 ---
 

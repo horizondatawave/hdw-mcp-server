@@ -40,6 +40,13 @@ export interface LinkedinUserReactionsArgs {
   timeout?: number;
 }
 
+export interface LinkedinUserCommentsArgs {
+  urn: string;
+  count?: number;
+  timeout?: number;
+  commented_after?: number;
+}
+
 export interface LinkedinChatMessagesArgs {
   user: string;
   company?: string;
@@ -174,6 +181,101 @@ export interface RedditSearchPostsArgs {
   count: number;
 }
 
+// Instagram types
+export interface InstagramUserArgs {
+  timeout?: number;
+  user: string;
+}
+
+export interface InstagramUserPostsArgs {
+  timeout?: number;
+  user: string;
+  count: number;
+}
+
+export interface InstagramPostCommentsArgs {
+  timeout?: number;
+  post: string;
+  count: number;
+}
+
+export interface InstagramUserLocation {
+  "@type": "InstagramUserLocation";
+  street: string;
+  city: string;
+  city_id: number;
+  zip: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface InstagramUser {
+  "@type": "InstagramUser";
+  id: string;
+  alias: string;
+  name: string;
+  url: string;
+  image: string;
+  follower_count: number;
+  following_count: number;
+  description: string;
+  media_count: number;
+  is_private: boolean;
+  is_verified: boolean;
+  is_business: boolean;
+  category: string;
+  external_url: string;
+  email: string;
+  whatsapp_number: string;
+  phone: string;
+  location: InstagramUserLocation;
+  links: string[];
+  mentions: string[];
+  hashtags: string[];
+  pinned_channels: string[];
+}
+
+export interface InstagramUserPreview {
+  "@type": "InstagramUserPreview";
+  id: string;
+  name: string;
+  alias: string;
+  url: string;
+  image: string;
+  is_verified: boolean;
+  is_private: boolean;
+}
+
+export interface InstagramPost {
+  "@type": "InstagramPost";
+  id: string;
+  code: string;
+  url: string;
+  image: string;
+  text: string;
+  created_at: number;
+  like_count: number;
+  comment_count: number;
+  reshare_count: number;
+  user: InstagramUserPreview;
+  type: string;
+  media: string[];
+  carousel_media_count: number;
+  is_paid_partnership: boolean;
+}
+
+export interface InstagramComment {
+  "@type": "InstagramComment";
+  id: string;
+  comment_index: number;
+  created_at: number;
+  text: string;
+  like_count: number;
+  reply_count: number;
+  parent_id: string;
+  user: InstagramUserPreview;
+}
+
 export interface RedditSubreddit {
   "@type": "RedditSubreddit";
   id: string;
@@ -200,6 +302,91 @@ export interface RedditPost {
   thumbnail_url: string;
   nsfw: boolean;
   spoiler: boolean;
+}
+
+// LinkedIn User Comments types
+export interface LinkedinURN {
+  type: string;
+  value: string;
+}
+
+export interface LinkedinReaction {
+  "@type": "LinkedinReaction";
+  type: "like" | "love" | "insightful" | "curious" | "celebrate" | "support";
+  count: number;
+}
+
+export interface LinkedinUserCommentUser {
+  "@type": "LinkedinUserCommentUser";
+  internal_id: LinkedinURN;
+  urn: LinkedinURN;
+  name: string;
+  alias: string;
+  url: string;
+  image: string;
+  headline: string;
+}
+
+export interface LinkedinUserPostUser {
+  "@type": "LinkedinUserPostUser";
+  internal_id: LinkedinURN;
+  urn: LinkedinURN;
+  name: string;
+  alias: string;
+  url: string;
+  headline: string;
+  image: string;
+}
+
+export interface LinkedinUserPostEvent {
+  "@type": "LinkedinUserPostEvent";
+  url: string;
+  image: string;
+  title: string;
+  date: string;
+  participant_count: number;
+}
+
+export interface LinkedinUserPostArticle {
+  "@type": "LinkedinUserPostArticle";
+  url: string;
+  urn: LinkedinURN;
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+}
+
+export interface LinkedinUserPost {
+  "@type": "LinkedinUserPost";
+  urn: LinkedinURN;
+  url: string;
+  author: LinkedinUserPostUser;
+  created_at: number;
+  share_urn: LinkedinURN;
+  is_empty_repost: boolean;
+  repost: any; // Can be complex nested structure
+  images: string[];
+  text: string;
+  comment_count: number;
+  share_count: number;
+  reactions: LinkedinReaction[];
+  event?: LinkedinUserPostEvent;
+  article?: LinkedinUserPostArticle;
+}
+
+export interface LinkedinUserComment {
+  "@type": "LinkedinUserComment";
+  urn: LinkedinURN;
+  url: string;
+  text: string;
+  author: LinkedinUserCommentUser;
+  created_at: number;
+  is_commenter_post_author: boolean;
+  comment_count: number;
+  reactions: LinkedinReaction[];
+  parent?: LinkedinURN;
+  post: LinkedinUserPost;
 }
 
 export function isValidLinkedinSearchUsersArgs(
@@ -274,6 +461,18 @@ export function isValidLinkedinUserReactionsArgs(
   if (typeof obj.urn !== "string" || !obj.urn.trim()) return false;
   if (obj.count !== undefined && typeof obj.count !== "number") return false;
   if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+  return true;
+}
+
+export function isValidLinkedinUserCommentsArgs(
+  args: unknown
+): args is LinkedinUserCommentsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+  if (typeof obj.urn !== "string" || !obj.urn.trim()) return false;
+  if (obj.count !== undefined && typeof obj.count !== "number") return false;
+  if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
+  if (obj.commented_after !== undefined && typeof obj.commented_after !== "number") return false;
   return true;
 }
 
@@ -669,6 +868,45 @@ export function isValidRedditSearchPostsArgs(
       obj.time_filter !== "week" && 
       obj.time_filter !== "day" && 
       obj.time_filter !== "hour") return false;
+
+  return true;
+}
+
+// Instagram validation functions
+export function isValidInstagramUserArgs(
+  args: unknown
+): args is InstagramUserArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.user !== "string" || !obj.user.trim()) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidInstagramUserPostsArgs(
+  args: unknown
+): args is InstagramUserPostsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.user !== "string" || !obj.user.trim()) return false;
+  if (typeof obj.count !== "number" || obj.count <= 0) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidInstagramPostCommentsArgs(
+  args: unknown
+): args is InstagramPostCommentsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.post !== "string" || !obj.post.trim()) return false;
+  if (typeof obj.count !== "number" || obj.count <= 0) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
 
   return true;
 }
