@@ -1,7 +1,7 @@
 {
   "name": "@horizondatawave/mcp",
   "version": "0.2.1",
-  "description": "A Model Context Protocol (MCP) server that provides access to Horizon Data Wave's LinkedIn API",
+  "description": "A Model Context Protocol (MCP) server that provides access to Horizon Data Wave's LinkedIn and Instagram APIs",
   "private": false,
   "type": "module",
   "bin": {
@@ -31,6 +31,7 @@
     "mcp",
     "claude",
     "linkedin",
+    "instagram",
     "hdw",
     "horizondatawave"
   ],

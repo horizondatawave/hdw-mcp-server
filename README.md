@@ -1,7 +1,7 @@
 # HDW MCP Server
 [![smithery badge](https://smithery.ai/badge/@horizondatawave/hdw-mcp-server)](https://smithery.ai/server/@horizondatawave/hdw-mcp-server)
 
-A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn data and functionalities using the HorizonDataWave API, enabling not only data retrieval but also robust management of user accounts.
+A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn and Instagram data and functionalities using the HorizonDataWave API, enabling not only data retrieval but also robust management of user accounts.
 ---
 
 ## Features
@@ -23,6 +23,10 @@ A Model Context Protocol (MCP) server that provides comprehensive access to Link
   
 - **Google Search**
 - **Reddit Search:** Search for Reddit posts with various filters including query, sort options, time filters, and result count.
+- **Instagram Data Access:**
+  - **User Profiles:** Get detailed Instagram user information by URL, alias, or ID.
+  - **User Posts:** Retrieve posts from Instagram users.
+  - **Post Comments:** Get comments for specific Instagram posts.
 
 ---
 
@@ -178,6 +182,29 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `time_filter` (optional, default: `"all"`; allowed values: `"all"`, `"year"`, `"month"`, `"week"`, `"day"`, `"hour"`).  
     - `count` (required): Max result count.  
     - `timeout` (optional, default: 300).
+
+19. **Get Instagram User**  
+    **Name:** `get_instagram_user`  
+    **Description:** Get Instagram user information by URL, alias or ID.  
+    **Parameters:**  
+    - `user` (required): User ID, alias or URL.  
+    - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
+
+20. **Get Instagram User Posts**  
+    **Name:** `get_instagram_user_posts`  
+    **Description:** Get Instagram user posts.  
+    **Parameters:**  
+    - `user` (required): User ID, alias or URL.  
+    - `count` (required): Max result count.  
+    - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
+
+21. **Get Instagram Post Comments**  
+    **Name:** `get_instagram_post_comments`  
+    **Description:** Get Instagram post comments.  
+    **Parameters:**  
+    - `post` (required): Post ID.  
+    - `count` (required): Max result count.  
+    - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
 
 ---
 

@@ -37,6 +37,9 @@ import {
   GoogleSearchPayload,
   LinkedinSearchPostsArgs,
   RedditSearchPostsArgs,
+  InstagramUserArgs,
+  InstagramUserPostsArgs,
+  InstagramPostCommentsArgs,
   isValidLinkedinSearchUsersArgs,
   isValidLinkedinUserProfileArgs,
   isValidLinkedinEmailUserArgs,
@@ -59,7 +62,10 @@ import {
   isValidLinkedinManagementConversationsArgs,
   isValidGoogleSearchPayload,
   isValidLinkedinSearchPostsArgs,
-  isValidRedditSearchPostsArgs
+  isValidRedditSearchPostsArgs,
+  isValidInstagramUserArgs,
+  isValidInstagramUserPostsArgs,
+  isValidInstagramPostCommentsArgs
 } from "./types.js";
 
 try {
@@ -112,6 +118,9 @@ const API_CONFIG = {
     LINKEDIN_SN_SEARCH_USERS: "/api/linkedin/sn_search/users",
     CONVERSATIONS: "/api/linkedin/management/conversations",
     GOOGLE_SEARCH: "/api/google/search",
+    INSTAGRAM_USER: "/api/instagram/user",
+    INSTAGRAM_USER_POSTS: "/api/instagram/user/posts",
+    INSTAGRAM_POST_COMMENTS: "/api/instagram/post/comments",
   }
 } as const;
 
@@ -687,6 +696,47 @@ const REDDIT_SEARCH_POSTS_TOOL: Tool = {
   }
 };
 
+const INSTAGRAM_USER_TOOL: Tool = {
+  name: "get_instagram_user",
+  description: "Get Instagram user information by URL, alias or ID",
+  inputSchema: {
+    type: "object",
+    properties: {
+      user: { type: "string", description: "User ID, alias or URL" },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["user"]
+  }
+};
+
+const INSTAGRAM_USER_POSTS_TOOL: Tool = {
+  name: "get_instagram_user_posts",
+  description: "Get Instagram user posts",
+  inputSchema: {
+    type: "object",
+    properties: {
+      user: { type: "string", description: "User ID, alias or URL" },
+      count: { type: "number", description: "Max result count", minimum: 1 },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["user", "count"]
+  }
+};
+
+const INSTAGRAM_POST_COMMENTS_TOOL: Tool = {
+  name: "get_instagram_post_comments",
+  description: "Get Instagram post comments",
+  inputSchema: {
+    type: "object",
+    properties: {
+      post: { type: "string", description: "Post ID" },
+      count: { type: "number", description: "Max result count", minimum: 1 },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["post", "count"]
+  }
+};
+
 const server = new Server(
   { name: "hdw-mcp", version: "0.1.0" },
   {
@@ -741,7 +791,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     SEND_LINKEDIN_POST_TOOL,
     LINKEDIN_SN_SEARCH_USERS_TOOL,
     GET_LINKEDIN_CONVERSATIONS_TOOL,
-    GOOGLE_SEARCH_TOOL
+    GOOGLE_SEARCH_TOOL,
+    INSTAGRAM_USER_TOOL,
+    INSTAGRAM_USER_POSTS_TOOL,
+    INSTAGRAM_POST_COMMENTS_TOOL
   ]
 }));
 
@@ -1794,6 +1847,124 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 type: "text",
                 mimeType: "text/plain",
                 text: `Reddit search posts API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_instagram_user": {
+        if (!isValidInstagramUserArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Instagram user arguments");
+        }
+        const { timeout = 300, user } = args as InstagramUserArgs;
+        
+        const requestData = {
+          timeout,
+          user
+        };
+        
+        log("Starting Instagram user lookup for:", user);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.INSTAGRAM_USER, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("Instagram user lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Instagram user API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_instagram_user_posts": {
+        if (!isValidInstagramUserPostsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Instagram user posts arguments");
+        }
+        const { timeout = 300, user, count } = args as InstagramUserPostsArgs;
+        
+        const requestData = {
+          timeout,
+          user,
+          count
+        };
+        
+        log(`Starting Instagram user posts lookup for: ${user}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.INSTAGRAM_USER_POSTS, requestData);
+          log(`Posts lookup complete, found ${response.length} results`);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("Instagram user posts lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Instagram user posts API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_instagram_post_comments": {
+        if (!isValidInstagramPostCommentsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Instagram post comments arguments");
+        }
+        const { timeout = 300, post, count } = args as InstagramPostCommentsArgs;
+        
+        const requestData = {
+          timeout,
+          post,
+          count
+        };
+        
+        log(`Starting Instagram post comments lookup for: ${post}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.INSTAGRAM_POST_COMMENTS, requestData);
+          log(`Comments lookup complete, found ${response.length} results`);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("Instagram post comments lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Instagram post comments API error: ${formatError(error)}`
               }
             ],
             isError: true

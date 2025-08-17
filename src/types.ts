@@ -181,6 +181,101 @@ export interface RedditSearchPostsArgs {
   count: number;
 }
 
+// Instagram types
+export interface InstagramUserArgs {
+  timeout?: number;
+  user: string;
+}
+
+export interface InstagramUserPostsArgs {
+  timeout?: number;
+  user: string;
+  count: number;
+}
+
+export interface InstagramPostCommentsArgs {
+  timeout?: number;
+  post: string;
+  count: number;
+}
+
+export interface InstagramUserLocation {
+  "@type": "InstagramUserLocation";
+  street: string;
+  city: string;
+  city_id: number;
+  zip: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface InstagramUser {
+  "@type": "InstagramUser";
+  id: string;
+  alias: string;
+  name: string;
+  url: string;
+  image: string;
+  follower_count: number;
+  following_count: number;
+  description: string;
+  media_count: number;
+  is_private: boolean;
+  is_verified: boolean;
+  is_business: boolean;
+  category: string;
+  external_url: string;
+  email: string;
+  whatsapp_number: string;
+  phone: string;
+  location: InstagramUserLocation;
+  links: string[];
+  mentions: string[];
+  hashtags: string[];
+  pinned_channels: string[];
+}
+
+export interface InstagramUserPreview {
+  "@type": "InstagramUserPreview";
+  id: string;
+  name: string;
+  alias: string;
+  url: string;
+  image: string;
+  is_verified: boolean;
+  is_private: boolean;
+}
+
+export interface InstagramPost {
+  "@type": "InstagramPost";
+  id: string;
+  code: string;
+  url: string;
+  image: string;
+  text: string;
+  created_at: number;
+  like_count: number;
+  comment_count: number;
+  reshare_count: number;
+  user: InstagramUserPreview;
+  type: string;
+  media: string[];
+  carousel_media_count: number;
+  is_paid_partnership: boolean;
+}
+
+export interface InstagramComment {
+  "@type": "InstagramComment";
+  id: string;
+  comment_index: number;
+  created_at: number;
+  text: string;
+  like_count: number;
+  reply_count: number;
+  parent_id: string;
+  user: InstagramUserPreview;
+}
+
 export interface RedditSubreddit {
   "@type": "RedditSubreddit";
   id: string;
@@ -773,6 +868,45 @@ export function isValidRedditSearchPostsArgs(
       obj.time_filter !== "week" && 
       obj.time_filter !== "day" && 
       obj.time_filter !== "hour") return false;
+
+  return true;
+}
+
+// Instagram validation functions
+export function isValidInstagramUserArgs(
+  args: unknown
+): args is InstagramUserArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.user !== "string" || !obj.user.trim()) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidInstagramUserPostsArgs(
+  args: unknown
+): args is InstagramUserPostsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.user !== "string" || !obj.user.trim()) return false;
+  if (typeof obj.count !== "number" || obj.count <= 0) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidInstagramPostCommentsArgs(
+  args: unknown
+): args is InstagramPostCommentsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.post !== "string" || !obj.post.trim()) return false;
+  if (typeof obj.count !== "number" || obj.count <= 0) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
 
   return true;
 }
