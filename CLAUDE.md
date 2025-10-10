@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a Model Context Protocol (MCP) server for Horizon Data Wave's LinkedIn and Instagram APIs. It provides comprehensive data access including LinkedIn user search, profile lookup, posts, reactions, comments, chat functionality, connection management, company information, Instagram user profiles and posts, and Reddit/Google search capabilities.
+This is a Model Context Protocol (MCP) server for AnySite's LinkedIn and Instagram APIs. It provides comprehensive data access including LinkedIn user search, profile lookup, posts, reactions, comments, chat functionality, connection management, company information, Instagram user profiles and posts, and Reddit/Google search capabilities.
 
 ## Build and Development Commands
 
@@ -17,9 +17,9 @@ This is a Model Context Protocol (MCP) server for Horizon Data Wave's LinkedIn a
 
 ### Entry Point (`src/index.ts`)
 - Main MCP server implementation with comprehensive LinkedIn API integration
-- Exports executable CLI tools: `hdw-mcp`, `horizondatawave-mcp`, `mcp`
+- Exports executable CLI tools: `anysite-mcp`, `anysite`, `mcp`
 - Uses Model Context Protocol SDK for server functionality
-- Implements 18+ LinkedIn tools and additional Reddit/Google search
+- Implements 19+ LinkedIn tools and additional Reddit/Google search
 
 ### Type System (`src/types.ts`)
 - Complete TypeScript definitions for all API endpoints
@@ -30,21 +30,21 @@ This is a Model Context Protocol (MCP) server for Horizon Data Wave's LinkedIn a
 ### Key Components
 
 #### Environment Configuration
-- Requires `HDW_ACCESS_TOKEN` for API authentication
-- Optional `HDW_ACCOUNT_ID` for management endpoints (chat, connections, posting)
-- Supports `.env` file and `~/.hdw-mcp.env` for configuration
+- Requires `ANYSITE_ACCESS_TOKEN` for API authentication
+- Optional `ANYSITE_ACCOUNT_ID` for management endpoints (chat, connections, posting)
+- Supports `.env` file and `~/.anysite-mcp.env` for configuration
 
 #### API Structure
-- Base URL: `https://api.horizondatawave.ai`
+- Base URL: `https://api.anysite.io`
 - All endpoints use POST requests with JSON payloads
 - Comprehensive error handling and logging
 - Timeout support (20-1500 seconds) for long-running operations
 
 #### Tool Categories
 1. **Search & Lookup**: User search, profile lookup, email lookup, company search
-2. **Posts & Content**: User posts, post comments/reactions/reposts, post search
+2. **Posts & Content**: User posts, post comments/reactions/reposts, post search, company posts
 3. **Management**: Chat messages, connection requests, post creation/commenting
-4. **Company Data**: Company lookup, employee search, Google company search
+4. **Company Data**: Company lookup, employee search, Google company search, company posts
 5. **Instagram**: User profiles, user posts, post comments
 6. **External APIs**: Reddit search, Google search
 
@@ -86,7 +86,7 @@ When extending functionality:
 ## Environment Setup
 
 Required environment variables:
-- `HDW_ACCESS_TOKEN` - API authentication token
-- `HDW_ACCOUNT_ID` - Account ID for management operations (optional for read-only)
+- `ANYSITE_ACCESS_TOKEN` - API authentication token
+- `ANYSITE_ACCOUNT_ID` - Account ID for management operations (optional for read-only)
 
-The server will exit with error code 1 if `HDW_ACCESS_TOKEN` is missing.
+The server will exit with error code 1 if `ANYSITE_ACCESS_TOKEN` is missing.

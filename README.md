@@ -1,7 +1,7 @@
-# HDW MCP Server
-[![smithery badge](https://smithery.ai/badge/@horizondatawave/hdw-mcp-server)](https://smithery.ai/server/@horizondatawave/hdw-mcp-server)
+# AnySite MCP Server
+[![smithery badge](https://smithery.ai/badge/@anysite/mcp)](https://smithery.ai/server/@anysite/mcp)
 
-A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn and Instagram data and functionalities using the HorizonDataWave API, enabling not only data retrieval but also robust management of user accounts.
+A Model Context Protocol (MCP) server that provides comprehensive access to LinkedIn and Instagram data and functionalities using the AnySite API, enabling not only data retrieval but also robust management of user accounts.
 ---
 
 ## Features
@@ -32,7 +32,7 @@ A Model Context Protocol (MCP) server that provides comprehensive access to Link
 
 ## Tools
 
-HDW MCP Server exposes several tools through the MCP protocol. Each tool is defined with its name, description, and input parameters:
+AnySite MCP Server exposes several tools through the MCP protocol. Each tool is defined with its name, description, and input parameters:
 
 1. **Search LinkedIn Users**  
    **Name:** `search_linkedin_users`  
@@ -198,13 +198,21 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
     - `count` (required): Max result count.  
     - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
 
-21. **Get Instagram Post Comments**  
-    **Name:** `get_instagram_post_comments`  
-    **Description:** Get Instagram post comments.  
-    **Parameters:**  
-    - `post` (required): Post ID.  
-    - `count` (required): Max result count.  
+21. **Get Instagram Post Comments**
+    **Name:** `get_instagram_post_comments`
+    **Description:** Get Instagram post comments.
+    **Parameters:**
+    - `post` (required): Post ID.
+    - `count` (required): Max result count.
     - `timeout` (optional, default: 300): Timeout in seconds (20-1500).
+
+22. **Get LinkedIn Company Posts**
+    **Name:** `get_linkedin_company_posts`
+    **Description:** Get LinkedIn posts for a company by URN.
+    **Parameters:**
+    - `urn` (required): Company URN (example: company:11130470).
+    - `count` (optional, default: 10): Max posts to return.
+    - `timeout` (optional, default: 300): Timeout in seconds.
 
 ---
 
@@ -212,10 +220,10 @@ HDW MCP Server exposes several tools through the MCP protocol. Each tool is defi
 
 ### Installing via Smithery
 
-To install HDW MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@horizondatawave/hdw-mcp-server):
+To install AnySite MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@anysite/mcp):
 
 ```bash
-npx -y @smithery/cli install @horizondatawave/hdw-mcp-server --client claude
+npx -y @smithery/cli install @anysite/mcp --client claude
 ```
 
 ### 1. Clone the Repository (macOS)
@@ -224,17 +232,17 @@ Open your terminal and run the following commands:
 
 ```bash
 # Clone the repository
-git clone https://github.com/horizondatawave/hdw-mcp-server.git
+git clone https://github.com/anysite/anysite-mcp-server.git
 
 # Change directory to the project folder
-cd hdw-mcp-server
+cd anysite-mcp-server
 
 # Install dependencies
 npm install
 ```
 ### 2. Obtain Your API Credentials
 
-Register at [app.horizondatawave.ai](https://app.horizondatawave.ai) to get your API key and 100 free credits. You will receive your **HDW_ACCESS_TOKEN** and **HDW_ACCOUNT_ID**.
+Register at [app.anysite.io](https://app.anysite.io) to get your API key and 100 free credits. You will receive your **ANYSITE_ACCESS_TOKEN** and **ANYSITE_ACCOUNT_ID**.
 
 ---
 
@@ -243,8 +251,8 @@ Register at [app.horizondatawave.ai](https://app.horizondatawave.ai) to get your
 Create a `.env` file in the root of your project with the following content:
 
 ```env
-HDW_ACCESS_TOKEN=YOUR_HD_W_ACCESS_TOKEN
-HDW_ACCOUNT_ID=YOUR_HD_W_ACCOUNT_ID
+ANYSITE_ACCESS_TOKEN=YOUR_ANYSITE_ACCESS_TOKEN
+ANYSITE_ACCOUNT_ID=YOUR_ANYSITE_ACCOUNT_ID
 ```
 ### 4. Client Configuration
 
@@ -255,12 +263,12 @@ Update your Claude configuration file (`claude_desktop_config.json`) with the fo
 ```json
 {
   "mcpServers": {
-    "hdw": {
+    "anysite": {
       "command": "npx",
-      "args": ["-y","@horizondatawave/mcp"],
+      "args": ["-y","@anysite/mcp"],
       "env": {
-        "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
-        "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
+        "ANYSITE_ACCESS_TOKEN": "YOUR_ANYSITE_ACCESS_TOKEN",
+        "ANYSITE_ACCOUNT_ID": "YOUR_ANYSITE_ACCOUNT_ID"
       }
     }
   }
@@ -275,11 +283,11 @@ Update your Claude configuration file (`claude_desktop_config.json`) with the fo
 
 #### 4.2 Cursor
 
-**Easy way:**  
+**Easy way:**
 Open Cursor Settings and add a new MCP server with the command:
 
 ```bash
-env HDW_ACCESS_TOKEN=your-access-token HDW_ACCOUNT_ID=your-account-id node /path/to/your/build/index.js
+env ANYSITE_ACCESS_TOKEN=your-access-token ANYSITE_ACCOUNT_ID=your-account-id node /path/to/your/build/index.js
 ```
 **Safe way:**  
 Copy the provided template `run.template.sh` to a new file (e.g. `run.sh`), update it with your credentials, and configure Cursor to run:
@@ -294,12 +302,12 @@ Update your Windsurf configuration file (`mcp_config.json`) with the following c
 ```json
 {
   "mcpServers": {
-    "hdw": {
+    "anysite": {
       "command": "npx",
-      "args": ["-y","@horizondatawave/mcp"],
+      "args": ["-y","@anysite/mcp"],
       "env": {
-        "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
-        "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
+        "ANYSITE_ACCESS_TOKEN": "YOUR_ANYSITE_ACCESS_TOKEN",
+        "ANYSITE_ACCOUNT_ID": "YOUR_ANYSITE_ACCOUNT_ID"
       }
     }
   }
@@ -316,12 +324,12 @@ Below is an example configuration for an MCP client (e.g., a custom integration)
 ```json
 {
   "mcpServers": {
-    "hdw": {
+    "anysite": {
       "command": "npx",
-      "args": ["-y","@horizondatawave/mcp"],
+      "args": ["-y","@anysite/mcp"],
       "env": {
-        "HDW_ACCESS_TOKEN": "YOUR_HD_W_ACCESS_TOKEN",
-        "HDW_ACCOUNT_ID": "YOUR_HD_W_ACCOUNT_ID"
+        "ANYSITE_ACCESS_TOKEN": "YOUR_ANYSITE_ACCESS_TOKEN",
+        "ANYSITE_ACCOUNT_ID": "YOUR_ANYSITE_ACCOUNT_ID"
       }
     }
   }

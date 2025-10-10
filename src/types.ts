@@ -199,6 +199,12 @@ export interface InstagramPostCommentsArgs {
   count: number;
 }
 
+export interface LinkedinCompanyPostsArgs {
+  urn: string;
+  count?: number;
+  timeout?: number;
+}
+
 export interface InstagramUserLocation {
   "@type": "InstagramUserLocation";
   street: string;
@@ -357,6 +363,16 @@ export interface LinkedinUserPostArticle {
   description: string;
 }
 
+export interface LinkedinUserPostDocument {
+  "@type": "LinkedinUserPostDocument";
+  urn: LinkedinURN;
+  url: string;
+  title: string;
+  cover_images: string[];
+  images: string[];
+  total_images_count: number;
+}
+
 export interface LinkedinUserPost {
   "@type": "LinkedinUserPost";
   urn: LinkedinURN;
@@ -367,12 +383,14 @@ export interface LinkedinUserPost {
   is_empty_repost: boolean;
   repost: any; // Can be complex nested structure
   images: string[];
+  video_url?: string;
   text: string;
   comment_count: number;
   share_count: number;
   reactions: LinkedinReaction[];
   event?: LinkedinUserPostEvent;
   article?: LinkedinUserPostArticle;
+  document?: LinkedinUserPostDocument;
 }
 
 export interface LinkedinUserComment {
@@ -907,6 +925,20 @@ export function isValidInstagramPostCommentsArgs(
   if (typeof obj.post !== "string" || !obj.post.trim()) return false;
   if (typeof obj.count !== "number" || obj.count <= 0) return false;
   if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidLinkedinCompanyPostsArgs(
+  args: unknown
+): args is LinkedinCompanyPostsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.urn !== "string" || !obj.urn.trim()) return false;
+  if (!obj.urn.includes("company:")) return false;
+  if (obj.count !== undefined && typeof obj.count !== "number") return false;
+  if (obj.timeout !== undefined && typeof obj.timeout !== "number") return false;
 
   return true;
 }

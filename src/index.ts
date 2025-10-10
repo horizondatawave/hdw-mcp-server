@@ -40,6 +40,7 @@ import {
   InstagramUserArgs,
   InstagramUserPostsArgs,
   InstagramPostCommentsArgs,
+  LinkedinCompanyPostsArgs,
   isValidLinkedinSearchUsersArgs,
   isValidLinkedinUserProfileArgs,
   isValidLinkedinEmailUserArgs,
@@ -65,31 +66,32 @@ import {
   isValidRedditSearchPostsArgs,
   isValidInstagramUserArgs,
   isValidInstagramUserPostsArgs,
-  isValidInstagramPostCommentsArgs
+  isValidInstagramPostCommentsArgs,
+  isValidLinkedinCompanyPostsArgs
 } from "./types.js";
 
 try {
   dotenv.config();
   if (process.env.HOME) {
-    dotenv.config({ path: `${process.env.HOME}/.hdw-mcp.env` });
+    dotenv.config({ path: `${process.env.HOME}/.anysite-mcp.env` });
   }
 } catch (error) {
   console.error("Error loading .env file:", error);
 }
 
-const API_KEY = process.env.HDW_ACCESS_TOKEN;
-const ACCOUNT_ID = process.env.HDW_ACCOUNT_ID;
+const API_KEY = process.env.ANYSITE_ACCESS_TOKEN;
+const ACCOUNT_ID = process.env.ANYSITE_ACCOUNT_ID;
 
 if (!API_KEY) {
-  console.error("Error: HDW_ACCESS_TOKEN environment variable is required");
+  console.error("Error: ANYSITE_ACCESS_TOKEN environment variable is required");
   process.exit(1);
 }
 if (!ACCOUNT_ID) {
-  console.error("Warning: HDW_ACCOUNT_ID environment variable is required for chat endpoints");
+  console.error("Warning: ANYSITE_ACCOUNT_ID environment variable is required for chat endpoints");
 }
 
 const API_CONFIG = {
-  BASE_URL: "https://api.horizondatawave.ai",
+  BASE_URL: "https://api.anysite.io",
   DEFAULT_QUERY: "software engineer",
   ENDPOINTS: {
     SEARCH_USERS: "/api/linkedin/search/users",
@@ -115,6 +117,7 @@ const API_CONFIG = {
     LINKEDIN_GOOGLE_COMPANY: "/api/linkedin/google/company",
     LINKEDIN_COMPANY: "/api/linkedin/company",
     LINKEDIN_COMPANY_EMPLOYEES: "/api/linkedin/company/employees",
+    LINKEDIN_COMPANY_POSTS: "/api/linkedin/company/posts",
     LINKEDIN_SN_SEARCH_USERS: "/api/linkedin/sn_search/users",
     CONVERSATIONS: "/api/linkedin/management/conversations",
     GOOGLE_SEARCH: "/api/google/search",
@@ -737,8 +740,22 @@ const INSTAGRAM_POST_COMMENTS_TOOL: Tool = {
   }
 };
 
+const GET_LINKEDIN_COMPANY_POSTS_TOOL: Tool = {
+  name: "get_linkedin_company_posts",
+  description: "Get LinkedIn posts for a company by URN",
+  inputSchema: {
+    type: "object",
+    properties: {
+      urn: { type: "string", description: "Company URN (example: company:11130470)" },
+      count: { type: "number", description: "Max posts to return", default: 10 },
+      timeout: { type: "number", description: "Timeout in seconds", default: 300 }
+    },
+    required: ["urn"]
+  }
+};
+
 const server = new Server(
-  { name: "hdw-mcp", version: "0.1.0" },
+  { name: "anysite-mcp", version: "0.1.0" },
   {
     capabilities: {
       resources: { supportedTypes: ["application/json", "text/plain"] },
@@ -794,7 +811,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GOOGLE_SEARCH_TOOL,
     INSTAGRAM_USER_TOOL,
     INSTAGRAM_USER_POSTS_TOOL,
-    INSTAGRAM_POST_COMMENTS_TOOL
+    INSTAGRAM_POST_COMMENTS_TOOL,
+    GET_LINKEDIN_COMPANY_POSTS_TOOL
   ]
 }));
 
@@ -1937,13 +1955,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           throw new McpError(ErrorCode.InvalidParams, "Invalid Instagram post comments arguments");
         }
         const { timeout = 300, post, count } = args as InstagramPostCommentsArgs;
-        
+
         const requestData = {
           timeout,
           post,
           count
         };
-        
+
         log(`Starting Instagram post comments lookup for: ${post}`);
         try {
           const response = await makeRequest(API_CONFIG.ENDPOINTS.INSTAGRAM_POST_COMMENTS, requestData);
@@ -1972,6 +1990,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
       }
 
+      case "get_linkedin_company_posts": {
+        if (!isValidLinkedinCompanyPostsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid LinkedIn company posts arguments");
+        }
+        const { urn, count = 10, timeout = 300 } = args as LinkedinCompanyPostsArgs;
+
+        const requestData = {
+          timeout,
+          urn,
+          count
+        };
+
+        log(`Starting LinkedIn company posts lookup for: ${urn}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.LINKEDIN_COMPANY_POSTS, requestData);
+          log(`Company posts lookup complete, found ${response.length} results`);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("LinkedIn company posts lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `LinkedIn company posts API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
     }
@@ -1992,7 +2050,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 async function runServer() {
   const transport = new StdioServerTransport();
-  log("Starting HDW MCP Server...");
+  log("Starting AnySite MCP Server...");
 
   process.on("uncaughtException", (error) => {
     log("Uncaught Exception:", error);
@@ -2002,7 +2060,7 @@ async function runServer() {
   });
 
   await server.connect(transport);
-  log("HDW MCP Server running on stdio");
+  log("AnySite MCP Server running on stdio");
 }
 
 runServer().catch((error) => {

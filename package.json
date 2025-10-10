@@ -1,12 +1,12 @@
 {
-  "name": "@horizondatawave/mcp",
+  "name": "@anysite/mcp",
   "version": "0.3.0",
-  "description": "A Model Context Protocol (MCP) server that provides access to Horizon Data Wave's LinkedIn and Instagram APIs",
+  "description": "A Model Context Protocol (MCP) server that provides access to AnySite's LinkedIn and Instagram APIs",
   "private": false,
   "type": "module",
   "bin": {
-    "hdw-mcp": "build/index.js",
-    "horizondatawave-mcp": "build/index.js",
+    "anysite-mcp": "build/index.js",
+    "anysite": "build/index.js",
     "mcp": "build/index.js"
   },
   "files": [
@@ -32,8 +32,7 @@
     "claude",
     "linkedin",
     "instagram",
-    "hdw",
-    "horizondatawave"
+    "anysite"
   ],
   "license": "MIT",
   "engines": {
@@ -43,6 +42,6 @@
     "type": "git",
     "url": "git+https://github.com/horizondatawave/hdw-mcp-server.git"
   },
-  "homepage": "https://horizondatawave.ai",
-  "author": "Horizon Data Wave"
+  "homepage": "https://anysite.io",
+  "author": "AnySite"
 }
