@@ -1,24 +1,35 @@
-# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
-
+# Smithery.ai configuration for anysite-mcp-server (STDIO runtime)
 startCommand:
   type: stdio
+
+  # JSON Schema - configuration options for the MCP server
   configSchema:
-    # JSON Schema defining the configuration options for the MCP.
     type: object
     required:
-      - hdwAccessToken
-      - hdwAccountId
+      - ANYSITE_ACCESS_TOKEN
+      - ANYSITE_ACCOUNT_ID
     properties:
-      hdwAccessToken:
+      ANYSITE_ACCESS_TOKEN:
         type: string
-        description: Your Horizon Data Wave access token
-      hdwAccountId:
+        title: "AnySite Access Token"
+        description: "Your AnySite API access token"
+      ANYSITE_ACCOUNT_ID:
         type: string
-        description: Your Horizon Data Wave account ID
-  commandFunction:
-    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
-    |-
-    (config) => ({ command: 'node', args: ['build/index.js'], env: { HDW_ACCESS_TOKEN: config.hdwAccessToken, HDW_ACCOUNT_ID: config.hdwAccountId } })
+        title: "AnySite Account ID"
+        description: "Your AnySite account ID"
+
+  # Command to start the MCP server via STDIO
+  commandFunction: |-
+    (config) => ({
+      command: 'node',
+      args: ['./build/index.js'],
+      env: {
+        ANYSITE_ACCESS_TOKEN: config.ANYSITE_ACCESS_TOKEN,
+        ANYSITE_ACCOUNT_ID: config.ANYSITE_ACCOUNT_ID,
+      }
+    })
+
+  # Example configuration
   exampleConfig:
-    hdwAccessToken: YOUR_HD_W_ACCESS_TOKEN
-    hdwAccountId: YOUR_ACCOUNT_ID
+    ANYSITE_ACCESS_TOKEN: "your_access_token_here"
+    ANYSITE_ACCOUNT_ID: "your_account_id_here"
