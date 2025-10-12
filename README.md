@@ -220,10 +220,10 @@ AnySite MCP Server exposes several tools through the MCP protocol. Each tool is 
 
 ### Installing via Smithery
 
-To install AnySite MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@anysite/mcp):
+To install AnySite MCP Server automatically via [Smithery](https://smithery.ai/server/@anysite/mcp):
 
 ```bash
-npx -y @smithery/cli install @anysite/mcp --client claude
+npx -y @smithery/cli install @anysite/mcp
 ```
 
 ### 1. Clone the Repository (macOS)
