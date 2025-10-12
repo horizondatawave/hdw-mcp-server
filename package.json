@@ -11,14 +11,13 @@
     "mcp": "build/server.js"
   },
   "files": [
-    "build",
-    "src"
+    "build"
   ],
   "scripts": {
-    "build": "tsc && chmod +x build/server.js",
-    "build:smithery": "npx smithery build",
-    "dev:smithery": "npx smithery dev",
-    "prepare": "npm run build",
+    "build": "npx smithery build",
+    "dev": "npx smithery dev",
+    "build:tsc": "tsc && chmod +x build/server.js",
+    "prepare": "npm run build:tsc",
     "watch": "tsc --watch",
     "inspector": "npx @modelcontextprotocol/inspector build/server.js"
   },
