@@ -55,7 +55,7 @@ const makeRequest = (endpoint: string, data: any, method: string = "POST"): Prom
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(postData),
-        Authorization: `Bearer ${API_KEY}`,
+        "access-token": API_KEY,
         ...(ACCOUNT_ID && { "x-account-id": ACCOUNT_ID })
       }
     };
