@@ -1,18 +1,4 @@
 #!/usr/bin/env node
-
-// Debug logging to stderr (won't interfere with STDIO transport)
-const debugLog = (...args: any[]) => {
-  console.error(`[DEBUG ${new Date().toISOString()}]`, ...args);
-};
-
-debugLog("Server script starting...");
-debugLog("Environment variables present:", {
-  ANYSITE_ACCESS_TOKEN: !!process.env.ANYSITE_ACCESS_TOKEN,
-  ANYSITE_ACCOUNT_ID: !!process.env.ANYSITE_ACCOUNT_ID,
-  HOME: process.env.HOME,
-  NODE_ENV: process.env.NODE_ENV
-});
-
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -84,23 +70,23 @@ import {
   isValidLinkedinCompanyPostsArgs
 } from "./types.js";
 
-debugLog("Loading dotenv...");
-try {
-  dotenv.config();
-  if (process.env.HOME) {
-    dotenv.config({ path: `${process.env.HOME}/.anysite-mcp.env` });
+// Load environment variables (only if not already loaded)
+function loadEnvIfNeeded() {
+  if (!process.env.ANYSITE_ACCESS_TOKEN) {
+    try {
+      dotenv.config();
+      if (process.env.HOME) {
+        dotenv.config({ path: `${process.env.HOME}/.anysite-mcp.env` });
+      }
+    } catch (error) {
+      console.error("Error loading .env file:", error);
+    }
   }
-} catch (error) {
-  debugLog("Error loading .env file:", error);
 }
 
-debugLog("After dotenv, environment variables:", {
-  ANYSITE_ACCESS_TOKEN: !!process.env.ANYSITE_ACCESS_TOKEN,
-  ANYSITE_ACCOUNT_ID: !!process.env.ANYSITE_ACCOUNT_ID
-});
-
-// Lazy getters for API credentials - only check when actually needed
+// Lazy getters for API credentials
 function getApiKey(): string {
+  loadEnvIfNeeded();
   const apiKey = process.env.ANYSITE_ACCESS_TOKEN;
   if (!apiKey) {
     throw new Error("ANYSITE_ACCESS_TOKEN environment variable is required");
@@ -109,13 +95,12 @@ function getApiKey(): string {
 }
 
 function getAccountId(): string | undefined {
+  loadEnvIfNeeded();
   return process.env.ANYSITE_ACCOUNT_ID;
 }
 
 const API_KEY = getApiKey;
 const ACCOUNT_ID = getAccountId;
-
-debugLog("Environment configuration successful");
 
 const API_CONFIG = {
   BASE_URL: "https://api.anysite.io",
@@ -1320,12 +1305,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { connected_after, count = 20, timeout = 300 } = args as GetLinkedinUserConnectionsArgs;
         const requestData: {
           timeout: number;
-          account_id?: string;
+          account_id: string;
           connected_after?: number;
           count?: number;
         } = {
           timeout: Number(timeout),
-          account_id: ACCOUNT_ID()
+          account_id: ACCOUNT_ID()!
         };
         if (connected_after != null) {
           requestData.connected_after = Number(connected_after);
@@ -1718,12 +1703,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { connected_after, count = 20, timeout = 300 } = args as LinkedinManagementConversationsPayload;
         const requestData: {
           timeout: number;
-          account_id?: string;
+          account_id: string;
           connected_after?: number;
           count?: number;
         } = {
           timeout: Number(timeout),
-          account_id: ACCOUNT_ID()
+          account_id: ACCOUNT_ID()!
         };
         if (connected_after != null) {
           requestData.connected_after = Number(connected_after);
@@ -2075,29 +2060,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
+// Export server for Smithery/module usage
+export { server };
+
 async function runServer() {
-  debugLog("runServer() called");
   const transport = new StdioServerTransport();
   log("Starting AnySite MCP Server...");
 
   process.on("uncaughtException", (error) => {
-    debugLog("Uncaught Exception:", error);
     log("Uncaught Exception:", error);
   });
   process.on("unhandledRejection", (reason, promise) => {
-    debugLog("Unhandled Rejection at:", promise, "reason:", reason);
     log("Unhandled Rejection at:", promise, "reason:", reason);
   });
 
-  debugLog("Connecting to transport...");
   await server.connect(transport);
-  debugLog("Transport connected successfully");
   log("AnySite MCP Server running on stdio");
 }
 
-debugLog("About to call runServer()");
-runServer().catch((error) => {
-  debugLog("Fatal error in runServer():", error);
-  log("Fatal error running server:", error);
-  process.exit(1);
-});
+// Only run server if this file is executed directly (not imported as a module)
+// Check if we're running as a script (process.argv[1] will contain this file's path)
+const isMainModule = process.argv[1]?.includes('index.js') || process.argv[1]?.includes('index.ts');
+if (isMainModule && typeof process !== 'undefined' && !process.env.SMITHERY_BUILD) {
+  runServer().catch((error) => {
+    log("Fatal error running server:", error);
+    process.exit(1);
+  });
+}
