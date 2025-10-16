@@ -51,6 +51,8 @@ import {
   GoogleSearchPayload,
   LinkedinSearchPostsArgs,
   RedditSearchPostsArgs,
+  RedditPostsArgs,
+  RedditPostCommentsArgs,
   InstagramUserArgs,
   InstagramUserPostsArgs,
   InstagramPostCommentsArgs,
@@ -78,6 +80,8 @@ import {
   isValidGoogleSearchPayload,
   isValidLinkedinSearchPostsArgs,
   isValidRedditSearchPostsArgs,
+  isValidRedditPostsArgs,
+  isValidRedditPostCommentsArgs,
   isValidInstagramUserArgs,
   isValidInstagramUserPostsArgs,
   isValidInstagramPostCommentsArgs,
@@ -132,6 +136,8 @@ const API_CONFIG = {
     LINKEDIN_USER_COMMENTS: "/api/linkedin/user/comments",
     LINKEDIN_SEARCH_POSTS: "/api/linkedin/search/posts",
     REDDIT_SEARCH_POSTS: "/api/reddit/search/posts",
+    REDDIT_POSTS: "/api/reddit/posts",
+    REDDIT_POST_COMMENTS: "/api/reddit/posts/comments",
     CHAT_MESSAGES: "/api/linkedin/management/chat/messages",
     CHAT_MESSAGE: "/api/linkedin/management/chat/message",
     USER_CONNECTION: "/api/linkedin/management/user/connection",
@@ -726,6 +732,32 @@ const REDDIT_SEARCH_POSTS_TOOL: Tool = {
   }
 };
 
+const REDDIT_POSTS_TOOL: Tool = {
+  name: "get_reddit_posts",
+  description: "Get detailed information about Reddit posts by post URL",
+  inputSchema: {
+    type: "object",
+    properties: {
+      post_url: { type: "string", description: "Reddit post URL (e.g., '/r/DogAdvice/comments/1o2g2pq/i_think_i_need_to_rehome_my_dog/')" },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["post_url"]
+  }
+};
+
+const REDDIT_POST_COMMENTS_TOOL: Tool = {
+  name: "get_reddit_post_comments",
+  description: "Get comments for a Reddit post by post URL",
+  inputSchema: {
+    type: "object",
+    properties: {
+      post_url: { type: "string", description: "Reddit post URL (e.g., '/r/DogAdvice/comments/1o2g2pq/i_think_i_need_to_rehome_my_dog/')" },
+      timeout: { type: "number", description: "Max scrapping execution timeout (in seconds)", default: 300, minimum: 20, maximum: 1500 }
+    },
+    required: ["post_url"]
+  }
+};
+
 const INSTAGRAM_USER_TOOL: Tool = {
   name: "get_instagram_user",
   description: "Get Instagram user information by URL, alias or ID",
@@ -821,6 +853,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     GET_LINKEDIN_USER_COMMENTS_TOOL,
     LINKEDIN_SEARCH_POSTS_TOOL,
     REDDIT_SEARCH_POSTS_TOOL,
+    REDDIT_POSTS_TOOL,
+    REDDIT_POST_COMMENTS_TOOL,
     GET_CHAT_MESSAGES_TOOL,
     SEND_CHAT_MESSAGE_TOOL,
     SEND_CONNECTION_REQUEST_TOOL,
@@ -1862,7 +1896,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           time_filter = "all",
           count
         } = args as RedditSearchPostsArgs;
-        
+
         const requestData = {
           timeout,
           query,
@@ -1870,7 +1904,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           time_filter,
           count
         };
-        
+
         log("Starting Reddit posts search with:", JSON.stringify(requestData));
         try {
           const response = await makeRequest(API_CONFIG.ENDPOINTS.REDDIT_SEARCH_POSTS, requestData);
@@ -1892,6 +1926,82 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 type: "text",
                 mimeType: "text/plain",
                 text: `Reddit search posts API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_reddit_posts": {
+        if (!isValidRedditPostsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Reddit posts arguments");
+        }
+        const { timeout = 300, post_url } = args as RedditPostsArgs;
+
+        const requestData = {
+          timeout,
+          post_url
+        };
+
+        log(`Starting Reddit post lookup for: ${post_url}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.REDDIT_POSTS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("Reddit posts lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Reddit posts API error: ${formatError(error)}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+
+      case "get_reddit_post_comments": {
+        if (!isValidRedditPostCommentsArgs(args)) {
+          throw new McpError(ErrorCode.InvalidParams, "Invalid Reddit post comments arguments");
+        }
+        const { timeout = 300, post_url } = args as RedditPostCommentsArgs;
+
+        const requestData = {
+          timeout,
+          post_url
+        };
+
+        log(`Starting Reddit post comments lookup for: ${post_url}`);
+        try {
+          const response = await makeRequest(API_CONFIG.ENDPOINTS.REDDIT_POST_COMMENTS, requestData);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "application/json",
+                text: JSON.stringify(response, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          log("Reddit post comments lookup error:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                mimeType: "text/plain",
+                text: `Reddit post comments API error: ${formatError(error)}`
               }
             ],
             isError: true

@@ -27,6 +27,8 @@ const API_CONFIG = {
     LINKEDIN_USER_COMMENTS: "/api/linkedin/user/comments",
     LINKEDIN_SEARCH_POSTS: "/api/linkedin/search/posts",
     REDDIT_SEARCH_POSTS: "/api/reddit/search/posts",
+    REDDIT_POSTS: "/api/reddit/posts",
+    REDDIT_POST_COMMENTS: "/api/reddit/posts/comments",
     CHAT_MESSAGES: "/api/linkedin/management/chat/messages",
     CHAT_MESSAGE: "/api/linkedin/management/chat/message",
     USER_CONNECTION: "/api/linkedin/management/user/connection",
@@ -743,6 +745,58 @@ export default function createServer({ config }: { config: z.infer<typeof config
         log("Reddit search posts error:", error);
         return {
           content: [{ type: "text", text: `Reddit search posts API error: ${formatError(error)}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Reddit posts by URL
+  server.tool(
+    "get_reddit_posts",
+    "Get Reddit post details by post URL",
+    {
+      post_url: z.string().describe("Reddit post URL (e.g., '/r/DogAdvice/comments/1o2g2pq/i_think_i_need_to_rehome_my_dog/')"),
+      timeout: z.number().default(300).describe("Timeout in seconds")
+    },
+    async ({ post_url, timeout }) => {
+      const requestData = { timeout, post_url };
+      log(`Starting Reddit post lookup for: ${post_url}`);
+      try {
+        const response = await makeRequest(API_CONFIG.ENDPOINTS.REDDIT_POSTS, requestData);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+        };
+      } catch (error) {
+        log("Reddit posts lookup error:", error);
+        return {
+          content: [{ type: "text", text: `Reddit posts API error: ${formatError(error)}` }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  // Reddit post comments
+  server.tool(
+    "get_reddit_post_comments",
+    "Get comments for a Reddit post by post URL",
+    {
+      post_url: z.string().describe("Reddit post URL (e.g., '/r/DogAdvice/comments/1o2g2pq/i_think_i_need_to_rehome_my_dog/')"),
+      timeout: z.number().default(300).describe("Timeout in seconds")
+    },
+    async ({ post_url, timeout }) => {
+      const requestData = { timeout, post_url };
+      log(`Starting Reddit post comments lookup for: ${post_url}`);
+      try {
+        const response = await makeRequest(API_CONFIG.ENDPOINTS.REDDIT_POST_COMMENTS, requestData);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response, null, 2) }]
+        };
+      } catch (error) {
+        log("Reddit post comments lookup error:", error);
+        return {
+          content: [{ type: "text", text: `Reddit post comments API error: ${formatError(error)}` }],
           isError: true
         };
       }

@@ -181,6 +181,16 @@ export interface RedditSearchPostsArgs {
   count: number;
 }
 
+export interface RedditPostsArgs {
+  timeout?: number;
+  post_url: string;
+}
+
+export interface RedditPostCommentsArgs {
+  timeout?: number;
+  post_url: string;
+}
+
 // Instagram types
 export interface InstagramUserArgs {
   timeout?: number;
@@ -886,6 +896,30 @@ export function isValidRedditSearchPostsArgs(
       obj.time_filter !== "week" && 
       obj.time_filter !== "day" && 
       obj.time_filter !== "hour") return false;
+
+  return true;
+}
+
+export function isValidRedditPostsArgs(
+  args: unknown
+): args is RedditPostsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.post_url !== "string" || !obj.post_url.trim()) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
+
+  return true;
+}
+
+export function isValidRedditPostCommentsArgs(
+  args: unknown
+): args is RedditPostCommentsArgs {
+  if (typeof args !== "object" || args === null) return false;
+  const obj = args as Record<string, unknown>;
+
+  if (typeof obj.post_url !== "string" || !obj.post_url.trim()) return false;
+  if (obj.timeout !== undefined && (typeof obj.timeout !== "number" || obj.timeout < 20 || obj.timeout > 1500)) return false;
 
   return true;
 }
