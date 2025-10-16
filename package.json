@@ -1,6 +1,6 @@
 {
-  "name": "@anysite/mcp",
-  "version": "0.3.1",
+  "name": "@anysiteio/mcp",
+  "version": "0.6.1",
   "description": "A Model Context Protocol (MCP) server that provides access to AnySite's LinkedIn and Instagram APIs",
   "private": false,
   "type": "module",
