@@ -108,12 +108,12 @@ AnySite MCP Server exposes several tools through the MCP protocol. Each tool is 
    - `timeout` (optional, default: 300).
 
 10. **Send LinkedIn Post Comment**  
-   **Name:** `send_linkedin_post_comment`  
-   **Description:** Create a comment on a LinkedIn post or reply.  
-   **Parameters:**  
-   - `text` (required): Comment text.  
-   - `urn` (required): Activity or comment URN.  
-   - `timeout` (optional, default: 300).
+    **Name:** `send_linkedin_post_comment`  
+    **Description:** Create a comment on a LinkedIn post or reply.  
+    **Parameters:**  
+    - `text` (required): Comment text.  
+    - `urn` (required): Activity or comment URN.  
+    - `timeout` (optional, default: 300).
 
 11. **Get LinkedIn User Connections**  
     **Name:** `get_linkedin_user_connections`  
@@ -220,10 +220,10 @@ AnySite MCP Server exposes several tools through the MCP protocol. Each tool is 
 
 ### Installing via Smithery
 
-To install AnySite MCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@anysite/mcp):
+To install AnySite MCP Server automatically via [Smithery](https://smithery.ai/server/@anysite/mcp):
 
 ```bash
-npx -y @smithery/cli install @anysite/mcp --client claude
+npx -y @smithery/cli install @anysite/mcp
 ```
 
 ### 1. Clone the Repository (macOS)
